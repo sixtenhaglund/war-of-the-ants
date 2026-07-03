@@ -58,15 +58,18 @@ function draw() {
     if (bc < 0 || br < 0 || bc >= COLS || br >= ROWS) continue;
     if (!visible[br * COLS + bc]) continue;
     drawBeetle(b.x, b.y, b.angle, b.dead);
+    if (!b.dead) drawBeetleHp(b);                 // health bar over living beetles
   }
+
+  drawParticles();                                // blood splatter
 
   drawQueen();
 
-  if (carrying) {                                 // the beetle riding on her back
+  if (carrying) {                                 // the beetle held in her mouth
     ctx.save();
     ctx.translate(queen.x, queen.y);
     ctx.rotate(queen.angle);
-    drawBeetle(-14, 0, 0, true, true);
+    drawBeetle(16, 0, 0, true, true);             // out front, in her jaws
     ctx.restore();
   }
 

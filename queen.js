@@ -56,7 +56,8 @@ function chompDamage() {
     if (b.dead || b.gone || b.carried) continue;
     if (Math.hypot(b.x - fx, b.y - fy) < 16) {
       b.hp -= 1;
-      if (b.hp <= 0) b.dead = true;           // now a carriable corpse
+      spawnBlood(b.x, b.y, 8);                 // splatter on the hit
+      if (b.hp <= 0) { b.dead = true; spawnBlood(b.x, b.y, 14); }  // extra on the kill
       return;                                 // a bite lands on one thing
     }
   }

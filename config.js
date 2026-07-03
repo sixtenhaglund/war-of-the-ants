@@ -21,6 +21,7 @@ let explored, visible;    // fog: seen-before? / seen right now?
 let beetles = [];         // bugs living in the caves
 let carrying = null;      // the dead beetle the queen is hauling (or null)
 let foodCount = 0;        // beetles delivered to the nest food pile
+let particles = [];       // blood droplets etc.
 let W, H;                 // screen size
 let running = false;
 
@@ -53,6 +54,7 @@ const REVEAL = 220;                          // how far the queen sees (pixels)
 const DIRT_HP = 3;                           // dirt breaks in 3 bites
 const ROCK_HP = 6;                           // rock is tougher: 6 bites
 const ROCK_CHANCE = 0.5;                     // half of the solid blocks are hard rock
+const BEETLE_HP = 2;                         // beetles die in 2 bites
 const BITE_COOLDOWN = 1.0;                   // seconds between bites (the wait)
 const BITE_ANIM = 0.45;                      // how long the bite ANIMATION takes
 const BITE_IMPACT = 0.75;                    // point in the animation (0..1) where jaws snap → damage

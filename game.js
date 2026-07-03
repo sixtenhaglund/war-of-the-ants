@@ -24,15 +24,17 @@ function update(dt) {
   legActive = move !== 0 && movedDist > 0.1;
   if (legActive) walkPhase += dt * 14;
 
-  // 3) biting: start on cooldown while held; damage lands when the jaws snap shut
+  // 3) biting: start on cooldown while held — but NOT while carrying something
+  //    (her mouth is full). Damage lands when the jaws snap shut.
   if (biteCd > 0) biteCd -= dt;
-  if (mouseHeld && biteCd <= 0) startBite();
+  if (mouseHeld && biteCd <= 0 && !carrying) startBite();
   if (bitePending && (BITE_COOLDOWN - biteCd) / BITE_ANIM >= BITE_IMPACT) {
     chompDamage();
     bitePending = false;
   }
 
   updateBeetles(dt);
+  updateParticles(dt);
 
   // pick up a dead beetle you walk over (if your jaws are empty)
   if (!carrying) {

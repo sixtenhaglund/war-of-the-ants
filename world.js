@@ -41,7 +41,7 @@ function buildWorld() {
       beetles.push({
         x: ccx + rand(-rad * 16, rad * 16),
         y: ccy + rand(-rad * 16, rad * 16),
-        hp: 2, angle: rand(0, 6.28), wanderT: 0,
+        hp: BEETLE_HP, angle: rand(0, 6.28), wanderT: 0,
         dead: false, carried: false, gone: false,
       });
     }
@@ -58,34 +58,44 @@ function isRock(px, py) {
 // how many bites a block needs to break: tough rock takes more than soft dirt
 function maxHits(i) { return hard[i] ? ROCK_HP : DIRT_HP; }
 
-// is any of the 8 tiles around (c,r) an open/hollow tile?
-function besideHollow(c, r) {
-  for (let dc = -1; dc <= 1; dc++) {
-    for (let dr = -1; dr <= 1; dr++) {
-      if (dc === 0 && dr === 0) continue;
-      const nc = c + dc, nr = r + dr;
-      if (nc < 0 || nr < 0 || nc >= COLS || nr >= ROWS) continue;
-      if (grid[nr * COLS + nc] === false) return true;
-    }
-  }
-  return false;
+// reveal one tile: mark it visible now, and remember + stamp it the first time
+function reveal(i, c, r) {
+  visible[i] = 1;
+  if (!explored[i]) { explored[i] = 1; stampMini(c, r); }
 }
 
-// VISION RULE: you see open tiles near you, and a rock tile only if it borders
-// open space. Newly-seen tiles get stamped onto the minimap cache.
+// VISION RULE: you only see open space that is CONNECTED to the queen through
+// other open tiles (a flood fill), plus the rock walls touching it — all within
+// the REVEAL radius. So a cave sealed behind rock stays hidden until you dig a
+// tunnel that actually links it to where you are.
 function updateFog() {
   visible.fill(0);
-  const rad = Math.ceil(REVEAL / TILE) + 1;
+  const maxD2 = REVEAL * REVEAL;
   const qc = Math.floor(queen.x / TILE), qr = Math.floor(queen.y / TILE);
-  for (let c = qc - rad; c <= qc + rad; c++) {
-    for (let r = qr - rad; r <= qr + rad; r++) {
-      if (c < 0 || r < 0 || c >= COLS || r >= ROWS) continue;
-      const x = c * TILE + TILE / 2, y = r * TILE + TILE / 2;
-      if (Math.hypot(x - queen.x, y - queen.y) >= REVEAL) continue;
-      const i = r * COLS + c;
-      if (grid[i] === false || besideHollow(c, r)) {
-        visible[i] = 1;
-        if (!explored[i]) { explored[i] = 1; stampMini(c, r); }   // remember + draw on minimap
+  if (qc < 0 || qr < 0 || qc >= COLS || qr >= ROWS) return;
+
+  const start = qr * COLS + qc;
+  const queue = [start];
+  reveal(start, qc, qr);
+
+  for (let head = 0; head < queue.length; head++) {
+    const i = queue[head];
+    const c = i % COLS, r = (i - c) / COLS;
+    for (let dc = -1; dc <= 1; dc++) {
+      for (let dr = -1; dr <= 1; dr++) {
+        if (dc === 0 && dr === 0) continue;
+        const nc = c + dc, nr = r + dr;
+        if (nc < 0 || nr < 0 || nc >= COLS || nr >= ROWS) continue;
+        const ni = nr * COLS + nc;
+        if (visible[ni]) continue;
+        const x = nc * TILE + TILE / 2, y = nr * TILE + TILE / 2;
+        if ((x - queen.x) ** 2 + (y - queen.y) ** 2 > maxD2) continue;  // out of range
+        if (grid[ni]) {
+          reveal(ni, nc, nr);            // a rock wall we can see (don't dig through it here)
+        } else if (dc === 0 || dr === 0) {
+          reveal(ni, nc, nr);            // open tile, orthogonally connected → flood on
+          queue.push(ni);
+        }
       }
     }
   }

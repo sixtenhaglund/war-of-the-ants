@@ -33,6 +33,16 @@ function drawBeetle(x, y, angle, dead, local) {
   ctx.restore();
 }
 
+// a small health bar floating above a living beetle (drawn in world coords,
+// not rotated with the beetle)
+function drawBeetleHp(b) {
+  const w = 16, x = b.x - w / 2, y = b.y - 14;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x - 1, y - 1, w + 2, 5);
+  ctx.fillStyle = '#e04030';
+  ctx.fillRect(x, y, w * (b.hp / BEETLE_HP), 3);
+}
+
 // the nest food pile — a heap that grows as you deliver beetles
 function drawFoodPile() {
   ctx.strokeStyle = 'rgba(255,215,120,0.4)'; ctx.lineWidth = 2;   // faint drop-spot ring
