@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>War of The Ants</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== MENU ===== -->
+<div id="menu">
+  <h1>WAR OF THE ANTS</h1>
+  <button onclick="startGame()">PLAY</button>
+  <button onclick="alert('Steer with the mouse, W/S to move. Hold click to mine walls and bite beetles. Beetles die in 2 bites — carry the body back to the food pile in your nest. Scroll to zoom.')">HOW TO PLAY</button>
+</div>
+
+<!-- ===== GAME ===== -->
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div id="hint">Mouse to steer &nbsp;·&nbsp; W forward / S back &nbsp;·&nbsp; Hold click to mine / bite &nbsp;·&nbsp; Kill beetles &amp; carry them to the nest pile</div>
+  <div id="score">🪲 Food: 0</div>
+</div>
+
+<!-- Game code, split into files. Order matters: config first (it defines the
+     shared state everything else uses), then the systems, then game.js runs. -->
+<script src="config.js"></script>
+<script src="world.js"></script>
+<script src="queen.js"></script>
+<script src="beetles.js"></script>
+<script src="render.js"></script>
+<script src="input.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
