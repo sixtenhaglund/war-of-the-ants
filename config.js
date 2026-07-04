@@ -56,9 +56,9 @@ const cam = { x: 0, y: 0, zoom: 1.4 };
 const REVEAL = 320;                          // how far the queen sees (pixels)
 
 // ---- tuning knobs ----
-const DIRT_HP = 3;                           // dirt breaks in 3 bites
-const ROCK_HP = 6;                           // grey rock is tougher: 6 bites
-const BIGROCK_HP = 10;                        // big 2×2 rock blocks are toughest: 10 bites
+const DIRT_HP = 2;                           // dirt breaks in 2 bites
+const ROCK_HP = 5;                           // grey rock is tougher: 5 bites
+const BIGROCK_HP = 8;                         // big 2×2 rock blocks are toughest: 8 bites
 const ROCK_CHANCE = 0.3;                     // fewer solid blocks are hard rock now (was 0.5)
 const BIGROCK_COUNT = 45;                     // how many tough 2×2 rock blocks to scatter
 const BEETLE_HP = 2;                         // beetles die in 2 bites
