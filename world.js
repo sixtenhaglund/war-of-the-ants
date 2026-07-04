@@ -25,7 +25,8 @@ function buildWorld() {
   beetles = [];
   carrying = null;
   foodCount = 0;
-  for (let n = 0; n < 90; n++) {
+  const placed = [];                            // caves already dropped, so new ones keep their distance
+  for (let n = 0; n < 140; n++) {
     const cc = 3 + Math.floor(Math.random() * (COLS - 6));
     const cr = 3 + Math.floor(Math.random() * (ROWS - 6));
     const ccx = cc * TILE + TILE / 2, ccy = cr * TILE + TILE / 2;
@@ -34,6 +35,15 @@ function buildWorld() {
     // you've dug a tunnel to it. (Bump this if caves get bigger again.)
     if (Math.hypot(ccx - cx, ccy - cy) < roomRadius + 420) continue;
     const rad = 1 + Math.floor(Math.random() * 5);         // 1 (small) … 5 (big) tiles
+    // keep caves APART: skip this spot if the new cave would touch an already
+    // placed one, so they never merge into one map-swallowing cavern. The +3
+    // leaves a few tiles of solid rock between every pair of caves.
+    let tooClose = false;
+    for (const p of placed) {
+      if (Math.hypot(cc - p.cc, cr - p.cr) < rad + p.rad + 3) { tooClose = true; break; }
+    }
+    if (tooClose) continue;
+    placed.push({ cc, cr, rad });
     for (let c = cc - rad; c <= cc + rad; c++)
       for (let r = cr - rad; r <= cr + rad; r++) {
         if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) continue;
