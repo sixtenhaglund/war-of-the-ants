@@ -20,14 +20,23 @@ function updateBeetles(dt) {
       if (!isRock(b.x, b.y + mvy)) b.y += mvy;
       b.angle = Math.atan2(dy, dx);   // face steadily away from the queen
       b.wanderT = rand(0.2, 0.6);     // don't fall back into an old wander mid-panic
+      b.idle = false;                 // never idle while running
     } else {
-      // wander slowly, bouncing to a new random heading off rock
+      // wander slowly — but every so often just stand still (idle) for a while
       b.wanderT -= dt;
-      if (b.wanderT <= 0) { b.angle = rand(0, 6.28); b.wanderT = rand(0.6, 2.2); }
-      const nx = b.x + Math.cos(b.angle) * 24 * dt;
-      const ny = b.y + Math.sin(b.angle) * 24 * dt;
-      if (!isRock(nx, b.y)) b.x = nx; else b.angle = rand(0, 6.28);
-      if (!isRock(b.x, ny)) b.y = ny; else b.angle = rand(0, 6.28);
+      if (b.wanderT <= 0) {
+        if (Math.random() < 0.35) {                     // sometimes pause and rest
+          b.idle = true; b.wanderT = rand(0.8, 2.5);
+        } else {                                        // otherwise pick a new heading
+          b.idle = false; b.angle = rand(0, 6.28); b.wanderT = rand(0.6, 2.2);
+        }
+      }
+      if (!b.idle) {                                     // move only when not resting
+        const nx = b.x + Math.cos(b.angle) * 24 * dt;
+        const ny = b.y + Math.sin(b.angle) * 24 * dt;
+        if (!isRock(nx, b.y)) b.x = nx; else b.angle = rand(0, 6.28);
+        if (!isRock(b.x, ny)) b.y = ny; else b.angle = rand(0, 6.28);
+      }
     }
   }
 }
