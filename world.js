@@ -83,6 +83,25 @@ function buildWorld() {
     }
   }
 
+  // dig thin TUNNELS linking nearby caves into networks: each cave connects to
+  // its nearest neighbour most of the time, and a second one now and then — so
+  // you get chains of two or more caves joined by 1–2 tile passages.
+  const MAXLINK = 14;                            // only join caves this close (tiles)
+  for (let a = 0; a < placed.length; a++) {
+    const A = placed[a];
+    let n1 = -1, d1 = Infinity, n2 = -1, d2 = Infinity;   // nearest & 2nd-nearest cave
+    for (let b = 0; b < placed.length; b++) {
+      if (b === a) continue;
+      const d = Math.hypot(placed[b].cc - A.cc, placed[b].cr - A.cr);
+      if (d < d1) { d2 = d1; n2 = n1; d1 = d; n1 = b; }
+      else if (d < d2) { d2 = d; n2 = b; }
+    }
+    if (n1 >= 0 && d1 <= MAXLINK && Math.random() < 0.65)
+      carveTunnel(A.cc, A.cr, placed[n1].cc, placed[n1].cr, Math.random() < 0.5 ? 1 : 2);
+    if (n2 >= 0 && d2 <= MAXLINK && Math.random() < 0.22)
+      carveTunnel(A.cc, A.cr, placed[n2].cc, placed[n2].cr, Math.random() < 0.5 ? 1 : 2);
+  }
+
   // ⚠ debug: stamp the whole map onto the minimap so every cave shows from the start
   if (DEBUG_SEE_ALL)
     for (let c = 0; c < COLS; c++)
@@ -102,6 +121,26 @@ function carveBlob(bcx, bcy, rad) {
       const x = dx * cs + dy * sn, y = -dx * sn + dy * cs;  // rotate into the oval's frame
       if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1 + Math.random() * 0.25) grid[r * COLS + c] = false;
     }
+}
+
+// carve a thin TUNNEL of open floor from (c0,r0) to (c1,r1), `thick` tiles wide.
+// Walks along the straight line and hollows a small square at each step. Never
+// digs near the nest, so caves can't get secretly connected to the queen.
+function carveTunnel(c0, r0, c1, r1, thick) {
+  const steps = Math.ceil(Math.hypot(c1 - c0, r1 - r0));
+  const midC = COLS / 2, midR = ROWS / 2;
+  for (let s = 0; s <= steps; s++) {
+    const t = s / steps;
+    const bc = Math.round(c0 + (c1 - c0) * t);
+    const br = Math.round(r0 + (r1 - r0) * t);
+    for (let dc = 0; dc < thick; dc++)
+      for (let dr = 0; dr < thick; dr++) {
+        const c = bc + dc, r = br + dr;
+        if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) continue;
+        if (Math.hypot(c - midC, r - midR) < 6) continue;   // keep the nest sealed
+        grid[r * COLS + c] = false;
+      }
+  }
 }
 
 // is the world point (px,py) inside a solid block?
