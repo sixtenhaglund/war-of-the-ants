@@ -69,22 +69,24 @@ function buildWorld() {
       if (Math.hypot(cc - p.cc, cr - p.cr) < reach + p.reach + 1) { tooClose = true; break; }
     }
     if (tooClose) continue;
-    placed.push({ cc, cr, reach });
+    placed.push({ cc, cr, reach, rad });                  // rad kept for spawning bugs later
 
     carveBlob(cc, cr, rad);                                // the main blob
     for (let l = 1; l < lobes; l++)                        // extra blobs for a rare big cave
       carveBlob(cc + Math.round(rand(-spread, spread)), cr + Math.round(rand(-spread, spread)), rad);
+  }
 
-    const count = 1 + Math.floor(Math.random() * 5);       // 1–5 beetles per cave
-    for (let k = 0; k < count; k++) {
-      beetles.push({
-        x: ccx + rand(-rad * 22, rad * 22),
-        y: ccy + rand(-rad * 22, rad * 22),
-        hp: BEETLE_HP, angle: rand(0, 6.28), wanderT: 0,
-        dead: false, carried: false, gone: false,
-      });
-    }
-
+  // spread exactly BUG_LIMIT bugs EVENLY over the caves, round-robin: cave 0, 1,
+  // 2, … then loop back — so every cave gets a near-equal share.
+  for (let k = 0; k < BUG_LIMIT && placed.length > 0; k++) {
+    const cave = placed[k % placed.length];
+    const ccx = cave.cc * TILE + TILE / 2, ccy = cave.cr * TILE + TILE / 2;
+    beetles.push({
+      x: ccx + rand(-cave.rad * 22, cave.rad * 22),
+      y: ccy + rand(-cave.rad * 22, cave.rad * 22),
+      hp: BEETLE_HP, angle: rand(0, 6.28), wanderT: 0,
+      dead: false, carried: false, gone: false,
+    });
   }
 
   // dig thin TUNNELS linking nearby caves into networks: each cave connects to

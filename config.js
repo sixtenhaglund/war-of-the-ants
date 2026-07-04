@@ -63,6 +63,7 @@ const BIGROCK_HP = 8;                         // big 2×2 rock blocks are toughe
 const ROCK_CHANCE = 0.3;                     // fewer solid blocks are hard rock now (was 0.5)
 const BIGROCK_COUNT = 45;                     // how many tough 2×2 rock blocks to scatter
 const BEETLE_HP = 2;                         // beetles die in 2 bites
+const BUG_LIMIT = 50;                         // total bugs on the map, spread evenly over caves
 const BITE_COOLDOWN = 1.0;                   // seconds between bites (the wait)
 const BITE_ANIM = 0.45;                      // how long the bite ANIMATION takes
 const BITE_IMPACT = 0.75;                    // point in the animation (0..1) where jaws snap → damage
