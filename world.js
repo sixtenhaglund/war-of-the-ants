@@ -9,20 +9,15 @@ function buildWorld() {
   explored = new Uint8Array(COLS * ROWS);
   visible  = new Uint8Array(COLS * ROWS);
   for (let i = 0; i < hard.length; i++) if (Math.random() < ROCK_CHANCE) hard[i] = 1;
-  // scatter tough 2×2 BIG ROCK blocks — one shared unit each (8 hp, break together).
-  // tag all four tiles with the same block id (the top-left index); skip spots that
-  // would overlap an existing big block so every block stays a clean 2×2.
+  // scatter tough 2×2 BIG ROCK patches. We only MARK the tiles here; which tiles
+  // actually form one block is worked out later (connectBigRocks) by joining
+  // orthogonal neighbours — so patches that land edge-to-edge become one bigger
+  // block, while diagonal ones stay separate.
   for (let n = 0; n < BIGROCK_COUNT; n++) {
     const c = 1 + Math.floor(Math.random() * (COLS - 3));
     const r = 1 + Math.floor(Math.random() * (ROWS - 3));
-    const id = r * COLS + c;
-    if (bigId[id] >= 0 || bigId[id + 1] >= 0 || bigId[id + COLS] >= 0 || bigId[id + COLS + 1] >= 0) continue;
     for (let dc = 0; dc < 2; dc++)
-      for (let dr = 0; dr < 2; dr++) {
-        const j = (r + dr) * COLS + (c + dc);
-        hard[j] = 2;
-        bigId[j] = id;
-      }
+      for (let dr = 0; dr < 2; dr++) hard[(r + dr) * COLS + (c + dc)] = 2;
   }
   mctx.clearRect(0, 0, COLS, ROWS);            // wipe the minimap cache for a fresh world
 
@@ -54,7 +49,7 @@ function buildWorld() {
 
     // RARE big caves: usually one blob, but ~12% of the time it's 2–3 blobs
     // clustered together (offset & overlapping) → one big, irregular cavern.
-    const lobes = Math.random() < 0.12 ? 2 + Math.floor(Math.random() * 2) : 1;
+    const lobes = Math.random() < 0.12 ? 2 + Math.floor(Math.random() * 3) : 1;   // rarely 2–4 blobs
     const spread = lobes > 1 ? Math.round(rad * 0.7) : 0;  // how far the extra blobs sit out
     const reach = rad + spread + 1;                        // farthest this cave's rock could open
 
@@ -102,6 +97,8 @@ function buildWorld() {
       carveTunnel(A.cc, A.cr, placed[n2].cc, placed[n2].cr, Math.random() < 0.5 ? 1 : 2);
   }
 
+  connectBigRocks();   // group orthogonally-touching big rock into single blocks
+
   // ⚠ debug: stamp the whole map onto the minimap so every cave shows from the start
   if (DEBUG_SEE_ALL)
     for (let c = 0; c < COLS; c++)
@@ -121,6 +118,28 @@ function carveBlob(bcx, bcy, rad) {
       const x = dx * cs + dy * sn, y = -dx * sn + dy * cs;  // rotate into the oval's frame
       if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1 + Math.random() * 0.25) grid[r * COLS + c] = false;
     }
+}
+
+// group big-rock tiles into blocks: every run of ORTHOGONALLY-connected big rock
+// gets one shared id (bigId), so it takes damage and breaks as a single block.
+// Diagonal-only touches don't join → diagonal big rocks stay separate blocks.
+function connectBigRocks() {
+  for (let i = 0; i < grid.length; i++) {
+    if (grid[i] === true && hard[i] === 2 && bigId[i] < 0) {   // a new block starts here
+      const stack = [i];
+      bigId[i] = i;                                            // the block's id = this tile
+      for (let h = 0; h < stack.length; h++) {
+        const k = stack[h], kc = k % COLS, kr = (k - kc) / COLS;
+        const nb = [];
+        if (kc > 0) nb.push(k - 1);
+        if (kc < COLS - 1) nb.push(k + 1);
+        if (kr > 0) nb.push(k - COLS);
+        if (kr < ROWS - 1) nb.push(k + COLS);
+        for (const m of nb)
+          if (grid[m] === true && hard[m] === 2 && bigId[m] < 0) { bigId[m] = i; stack.push(m); }
+      }
+    }
+  }
 }
 
 // carve a thin TUNNEL of open floor from (c0,r0) to (c1,r1), `thick` tiles wide.

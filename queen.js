@@ -68,17 +68,22 @@ function chompDamage() {
   const i = r * COLS + c;
   if (grid[i] !== true) return;
 
-  if (hard[i] === 2 && bigId[i] >= 0) {         // BIG ROCK: one shared 2×2 unit
+  if (hard[i] === 2 && bigId[i] >= 0) {         // BIG ROCK: one shared connected block
     const o = bigId[i];
-    hits[o] += 1;                               // damage saved on the block's top-left
+    hits[o] += 1;                               // damage saved on the block's id tile
     if (hits[o] >= BIGROCK_HP) {                // whole block breaks at once
-      const oc = o % COLS, or = (o - oc) / COLS;
-      for (let dc = 0; dc < 2; dc++)
-        for (let dr = 0; dr < 2; dr++) {
-          const j = (or + dr) * COLS + (oc + dc);
-          grid[j] = false; hits[j] = 0; bigId[j] = -1;
-          stampMini(oc + dc, or + dr);
-        }
+      const stack = [i];                        // flood the connected block open
+      while (stack.length) {
+        const k = stack.pop();
+        if (!(grid[k] === true && hard[k] === 2 && bigId[k] === o)) continue;
+        grid[k] = false; hits[k] = 0; bigId[k] = -1;
+        const kc = k % COLS, kr = (k - kc) / COLS;
+        stampMini(kc, kr);
+        if (kc > 0) stack.push(k - 1);
+        if (kc < COLS - 1) stack.push(k + 1);
+        if (kr > 0) stack.push(k - COLS);
+        if (kr < ROWS - 1) stack.push(k + COLS);
+      }
     }
     return;
   }

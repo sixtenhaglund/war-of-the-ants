@@ -31,11 +31,12 @@ function draw() {
         ctx.fillStyle = col[0];
         ctx.fillRect(x, y, TILE, TILE);
         if (hard[i] === 2) {
-          // BIG ROCK: only inset/border the edges that face NON-big-rock, so
-          // touching big-rock tiles merge into one chunky 2×2-sized block.
+          // BIG ROCK: only frame/outline the edges facing NON-big-rock, so
+          // ORTHOGONALLY touching big rock fuses into one block (diagonal touches
+          // don't join). Inner edges OVERLAP by 1px so the fills leave no seam.
           const bT = isBigRock(c, r - 1), bB = isBigRock(c, r + 1),
                 bL = isBigRock(c - 1, r), bR = isBigRock(c + 1, r);
-          const l = bL ? 0 : 3, t = bT ? 0 : 3, rr = bR ? 0 : 3, bb = bB ? 0 : 3;
+          const l = bL ? -1 : 3, t = bT ? -1 : 3, rr = bR ? -1 : 3, bb = bB ? -1 : 3;
           ctx.fillStyle = col[1];
           ctx.fillRect(x + l, y + t, TILE - l - rr, TILE - t - bb);
           ctx.strokeStyle = col[2]; ctx.lineWidth = 1;
@@ -45,20 +46,22 @@ function draw() {
           if (!bL) { ctx.moveTo(x + 0.5, y + 0.5); ctx.lineTo(x + 0.5, y + TILE + 0.5); }
           if (!bR) { ctx.moveTo(x + TILE + 0.5, y + 0.5); ctx.lineTo(x + TILE + 0.5, y + TILE + 0.5); }
           ctx.stroke();
+          // darken from the whole block's shared health, overlapping inner edges
+          const dmg = bigId[i] >= 0 ? hits[bigId[i]] / BIGROCK_HP : 0;
+          if (dmg > 0) {
+            ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * dmg) + ')';
+            ctx.fillRect(x - (bL ? 1 : 0), y - (bT ? 1 : 0),
+                         TILE + (bL ? 1 : 0) + (bR ? 1 : 0), TILE + (bT ? 1 : 0) + (bB ? 1 : 0));
+          }
         } else {
           ctx.fillStyle = col[1];
           ctx.fillRect(x + 3, y + 3, TILE - 8, TILE - 8);
           ctx.strokeStyle = col[2];
           ctx.strokeRect(x + 0.5, y + 0.5, TILE, TILE);
-        }
-        // damage darkening: big rock reads its whole block's shared health, so
-        // all four tiles darken together; other blocks use their own hits.
-        const dmg = hard[i] === 2 && bigId[i] >= 0
-          ? hits[bigId[i]] / BIGROCK_HP
-          : hits[i] / maxHits(i);
-        if (dmg > 0) {
-          ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * dmg) + ')';
-          ctx.fillRect(x, y, TILE, TILE);
+          if (hits[i] > 0) {                        // per-block damage darkening
+            ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * (hits[i] / maxHits(i))) + ')';
+            ctx.fillRect(x, y, TILE, TILE);
+          }
         }
       } else {                                    // open floor
         ctx.fillStyle = '#2a1e0e';
