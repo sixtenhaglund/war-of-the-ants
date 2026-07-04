@@ -10,21 +10,25 @@ function updateBeetles(dt) {
     const dx = b.x - queen.x, dy = b.y - queen.y;   // vector pointing AWAY from her
     const dist = Math.hypot(dx, dy);
 
-    let speed;
     if (dist < FLEE_RANGE) {
-      b.angle = Math.atan2(dy, dx);   // face straight away from the queen
+      // PANIC: run straight away from the queen. If a wall blocks one direction,
+      // just SLIDE along it (move the clear axis) — never randomise the angle, or
+      // the beetle spins frantically pressed against the rock.
+      const inv = dist > 0.001 ? 1 / dist : 1;
+      const mvx = dx * inv * 52 * dt, mvy = dy * inv * 52 * dt;
+      if (!isRock(b.x + mvx, b.y)) b.x += mvx;
+      if (!isRock(b.x, b.y + mvy)) b.y += mvy;
+      b.angle = Math.atan2(dy, dx);   // face steadily away from the queen
       b.wanderT = rand(0.2, 0.6);     // don't fall back into an old wander mid-panic
-      speed = 52;                     // scared beetles are quick (but slower than the queen)
     } else {
+      // wander slowly, bouncing to a new random heading off rock
       b.wanderT -= dt;
       if (b.wanderT <= 0) { b.angle = rand(0, 6.28); b.wanderT = rand(0.6, 2.2); }
-      speed = 24;
+      const nx = b.x + Math.cos(b.angle) * 24 * dt;
+      const ny = b.y + Math.sin(b.angle) * 24 * dt;
+      if (!isRock(nx, b.y)) b.x = nx; else b.angle = rand(0, 6.28);
+      if (!isRock(b.x, ny)) b.y = ny; else b.angle = rand(0, 6.28);
     }
-
-    const nx = b.x + Math.cos(b.angle) * speed * dt;
-    const ny = b.y + Math.sin(b.angle) * speed * dt;
-    if (!isRock(nx, b.y)) b.x = nx; else b.angle = rand(0, 6.28);
-    if (!isRock(b.x, ny)) b.y = ny; else b.angle = rand(0, 6.28);
   }
 }
 
