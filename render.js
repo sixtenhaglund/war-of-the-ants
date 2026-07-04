@@ -64,10 +64,10 @@ function draw() {
           }
         }
       } else {                                    // open floor
-        ctx.fillStyle = grass[i] ? '#26240f' : '#2a1e0e';   // grassy ground vs bare dirt
+        ctx.fillStyle = grass[i] ? '#2f8a34' : '#2a1e0e';   // grassy ground vs bare dirt
         ctx.fillRect(x, y, TILE, TILE);
         if (grass[i]) {                            // flat grass flecks (fixed per tile)
-          ctx.fillStyle = '#3f6b2e';
+          ctx.fillStyle = '#3fa845';
           for (let g = 0; g < 4; g++) {
             const gx = x + 4 + ((c * 13 + g * 11) % (TILE - 8));
             const gy = y + 4 + ((r * 17 + g * 7) % (TILE - 8));
