@@ -23,8 +23,7 @@ let explored, visible;    // fog: seen-before? / seen right now?
 let beetles = [];         // bugs living in the caves
 let carrying = null;      // the dead beetle the queen is hauling (or null)
 let foodCount = 0;        // beetles delivered to the nest food pile
-let plants = [];          // cave decorations: grass, bushes, berry plants
-let berryCount = 0;       // berries you've picked up
+let plants = [];          // cave decorations: bushes and berry plants
 let particles = [];       // blood droplets etc.
 let W, H;                 // screen size
 let running = false;

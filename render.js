@@ -103,11 +103,18 @@ function draw() {
 
   drawQueen();
 
-  if (carrying) {                                 // the beetle held in her mouth
+  if (carrying) {                                 // whatever's held in her mouth
     ctx.save();
     ctx.translate(queen.x, queen.y);
     ctx.rotate(queen.angle);
-    drawBeetle(16, 0, 0, true, true);             // out front, in her jaws
+    if (carrying.kind === 'berry') {
+      ctx.fillStyle = '#d23b3b';                  // a berry in her jaws
+      ctx.beginPath(); ctx.arc(16, 0, 4, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#f07a68';
+      ctx.beginPath(); ctx.arc(14.8, -1.3, 1.4, 0, 6.28); ctx.fill();
+    } else {
+      drawBeetle(16, 0, 0, true, true);           // a beetle in her jaws
+    }
     ctx.restore();
   }
 

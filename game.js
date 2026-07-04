@@ -40,22 +40,18 @@ function update(dt) {
   if (!carrying) {
     for (const b of beetles) {
       if (b.dead && !b.carried && !b.gone && Math.hypot(b.x - queen.x, b.y - queen.y) < 20) {
-        carrying = b; b.carried = true; break;
+        b.carried = true;
+        carrying = { kind: 'beetle', food: 2, beetle: b };   // beetle = 2 food
+        break;
       }
     }
   }
-  // drop it on the nest food pile → it counts as food
+  // drop whatever you're carrying on the nest food pile → it becomes food
   if (carrying && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
-    carrying.gone = true; carrying = null; foodCount++;
+    foodCount += carrying.food;                 // beetle = 2, berry = 1
+    if (carrying.beetle) carrying.beetle.gone = true;
+    carrying = null;
     document.getElementById('score').textContent = '🪲 Food: ' + foodCount;
-  }
-
-  // pick any berry you walk over
-  for (const p of plants) {
-    if (p.type === 'berry' && !p.picked && Math.hypot(p.x - queen.x, p.y - queen.y) < 18) {
-      p.picked = true; berryCount++;
-      document.getElementById('berries').textContent = '🍒 Berries: ' + berryCount;
-    }
   }
 
   updateFog();

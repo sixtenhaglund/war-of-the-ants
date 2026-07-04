@@ -12,15 +12,14 @@
 <div id="menu">
   <h1>WAR OF THE ANTS</h1>
   <button onclick="startGame()">PLAY</button>
-  <button onclick="alert('Steer with the mouse, W/S to move. Hold click to mine walls and bite beetles. Beetles die in 2 bites — carry the body back to the food pile in your nest. Scroll to zoom.')">HOW TO PLAY</button>
+  <button onclick="alert('Steer with the mouse, W/S to move. Hold click to mine walls, bite beetles, and pick berries. Beetles die in 2 bites — carry the body back to the food pile in your nest for 2 food. Bite a berry to carry it back for 1 food. Scroll to zoom.')">HOW TO PLAY</button>
 </div>
 
 <!-- ===== GAME ===== -->
 <div id="game">
   <canvas id="cv"></canvas>
-  <div id="hint">Mouse to steer &nbsp;·&nbsp; W forward / S back &nbsp;·&nbsp; Hold click to mine / bite &nbsp;·&nbsp; Kill beetles &amp; carry them to the nest pile</div>
+  <div id="hint">Mouse to steer &nbsp;·&nbsp; W forward / S back &nbsp;·&nbsp; Hold click to mine / bite / pick berries &nbsp;·&nbsp; Carry beetles (2) &amp; berries (1) to the nest pile</div>
   <div id="score">🪲 Food: 0</div>
-  <div id="berries">🍒 Berries: 0</div>
 </div>
 
 <!-- Game code, split into files. Order matters: config first (it defines the
