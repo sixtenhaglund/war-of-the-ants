@@ -42,6 +42,8 @@ function buildWorld() {
 
   // scatter open CAVES through the rock — some small, some big — with beetles.
   beetles = [];
+  plants = [];
+  berryCount = 0;
   carrying = null;
   foodCount = 0;
   const placed = [];                            // caves already dropped, so new ones keep their distance
@@ -83,6 +85,18 @@ function buildWorld() {
         hp: BEETLE_HP, angle: rand(0, 6.28), wanderT: 0,
         dead: false, carried: false, gone: false,
       });
+    }
+
+    // scatter little plants across the cave floor: mostly grass, some bushes,
+    // and the odd berry plant you can pick from.
+    const plantN = 3 + Math.floor(Math.random() * rad * 2);
+    for (let k = 0; k < plantN; k++) {
+      const px = ccx + rand(-rad * 30, rad * 30);
+      const py = ccy + rand(-rad * 30, rad * 30);
+      if (isRock(px, py)) continue;                        // only on open floor
+      const roll = Math.random();
+      const type = roll < 0.6 ? 'grass' : roll < 0.85 ? 'bush' : 'berry';
+      plants.push({ x: px, y: py, type, picked: false, seed: Math.random() });
     }
   }
 

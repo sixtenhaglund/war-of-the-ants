@@ -50,6 +50,14 @@ function update(dt) {
     document.getElementById('score').textContent = '🪲 Food: ' + foodCount;
   }
 
+  // pick any berry you walk over
+  for (const p of plants) {
+    if (p.type === 'berry' && !p.picked && Math.hypot(p.x - queen.x, p.y - queen.y) < 18) {
+      p.picked = true; berryCount++;
+      document.getElementById('berries').textContent = '🍒 Berries: ' + berryCount;
+    }
+  }
+
   updateFog();
 
   // camera follows the queen, clamped so we never show past the world edge

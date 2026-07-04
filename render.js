@@ -75,6 +75,8 @@ function draw() {
     }
   }
 
+  drawPlants();                                   // cave grass, bushes, berries
+
   // food pile in the nest (once you've seen that spot)
   const fpc = Math.floor(foodPile.x / TILE), fpr = Math.floor(foodPile.y / TILE);
   if (explored[fpr * COLS + fpc]) drawFoodPile();
@@ -162,4 +164,49 @@ function drawMinimap() {
     ctx.fillText('Press M to close', W / 2, oy + dh + 26);
     ctx.textAlign = 'left';                        // reset so other text isn't centred
   }
+}
+
+// ---- cave plants: grass tufts, bushes, and pick-able berry plants ----
+function drawPlants() {
+  for (const p of plants) {
+    const pc = Math.floor(p.x / TILE), pr = Math.floor(p.y / TILE);
+    if (pc < 0 || pr < 0 || pc >= COLS || pr >= ROWS) continue;
+    if (!visible[pr * COLS + pc]) continue;        // only where the queen can see
+    drawPlant(p);
+  }
+}
+
+function drawPlant(p) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.scale(0.8 + p.seed * 0.5, 0.8 + p.seed * 0.5);   // slight size variety per plant
+
+  if (p.type === 'grass') {
+    ctx.strokeStyle = '#4c8a3a'; ctx.lineWidth = 1.5;
+    for (let k = -2; k <= 2; k++) {                // a little fan of blades
+      ctx.beginPath();
+      ctx.moveTo(k * 2, 3);
+      ctx.lineTo(k * 2 + k * 0.8, -5 - (2 - Math.abs(k)) * 1.5);
+      ctx.stroke();
+    }
+  } else if (p.type === 'bush') {
+    ctx.fillStyle = '#2f6b2c';                     // clump of round leaves
+    for (const [ox, oy, r] of [[-4, 1, 5], [4, 1, 5], [0, -3, 6], [0, 2, 5]]) {
+      ctx.beginPath(); ctx.arc(ox, oy, r, 0, 6.28); ctx.fill();
+    }
+    ctx.fillStyle = '#3c8a37';                     // lighter highlight on top
+    ctx.beginPath(); ctx.arc(-1, -2, 4, 0, 6.28); ctx.fill();
+  } else {                                         // berry plant
+    ctx.fillStyle = '#2f6b2c';                     // small green plant
+    for (const [ox, oy] of [[-4, 1], [4, 1], [0, -3]]) {
+      ctx.beginPath(); ctx.arc(ox, oy, 4.5, 0, 6.28); ctx.fill();
+    }
+    if (!p.picked) {                               // the pickable berry (gone once taken)
+      ctx.fillStyle = '#d23b3b';
+      ctx.beginPath(); ctx.arc(0, -5, 3.4, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#f07a68';                   // shine
+      ctx.beginPath(); ctx.arc(-1.1, -6, 1.1, 0, 6.28); ctx.fill();
+    }
+  }
+  ctx.restore();
 }

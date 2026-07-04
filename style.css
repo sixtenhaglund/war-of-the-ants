@@ -26,3 +26,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; font-family: system-ui
   position: fixed; top: 52px; left: 12px; color: #ffd479; font-weight: 700;
   font-size: 16px; background: rgba(0,0,0,.4); padding: 6px 10px; border-radius: 6px;
 }
+#berries {
+  position: fixed; top: 88px; left: 12px; color: #ff8a7a; font-weight: 700;
+  font-size: 16px; background: rgba(0,0,0,.4); padding: 6px 10px; border-radius: 6px;
+}
