@@ -57,8 +57,10 @@ const REVEAL = 320;                          // how far the queen sees (pixels)
 
 // ---- tuning knobs ----
 const DIRT_HP = 3;                           // dirt breaks in 3 bites
-const ROCK_HP = 6;                           // rock is tougher: 6 bites
-const ROCK_CHANCE = 0.5;                     // half of the solid blocks are hard rock
+const ROCK_HP = 6;                           // grey rock is tougher: 6 bites
+const BIGROCK_HP = 10;                        // big 2×2 rock blocks are toughest: 10 bites
+const ROCK_CHANCE = 0.3;                     // fewer solid blocks are hard rock now (was 0.5)
+const BIGROCK_COUNT = 45;                     // how many tough 2×2 rock blocks to scatter
 const BEETLE_HP = 2;                         // beetles die in 2 bites
 const BITE_COOLDOWN = 1.0;                   // seconds between bites (the wait)
 const BITE_ANIM = 0.45;                      // how long the bite ANIMATION takes
@@ -110,6 +112,6 @@ const mctx = mini.getContext('2d');
 // paint one tile onto the minimap cache in its current colour
 function stampMini(c, r) {
   const i = r * COLS + c;
-  mctx.fillStyle = grid[i] ? (hard[i] ? '#6c6c7a' : '#6b5230') : '#3a2b16';
+  mctx.fillStyle = grid[i] ? (hard[i] === 2 ? '#4c4c5e' : hard[i] ? '#6c6c7a' : '#6b5230') : '#3a2b16';
   mctx.fillRect(c, r, 1, 1);
 }

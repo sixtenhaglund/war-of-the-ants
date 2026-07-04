@@ -8,6 +8,13 @@ function buildWorld() {
   explored = new Uint8Array(COLS * ROWS);
   visible  = new Uint8Array(COLS * ROWS);
   for (let i = 0; i < hard.length; i++) if (Math.random() < ROCK_CHANCE) hard[i] = 1;
+  // scatter tough 2×2 BIG ROCK blocks (10 hp) — rare, hard walls to dig around
+  for (let n = 0; n < BIGROCK_COUNT; n++) {
+    const c = 1 + Math.floor(Math.random() * (COLS - 3));
+    const r = 1 + Math.floor(Math.random() * (ROWS - 3));
+    for (let dc = 0; dc < 2; dc++)
+      for (let dr = 0; dr < 2; dr++) hard[(r + dr) * COLS + (c + dc)] = 2;
+  }
   mctx.clearRect(0, 0, COLS, ROWS);            // wipe the minimap cache for a fresh world
 
   // ...except a small open NEST room carved around the queen. Solid walls
@@ -95,8 +102,8 @@ function isRock(px, py) {
   return grid[r * COLS + c] === true;
 }
 
-// how many bites a block needs to break: tough rock takes more than soft dirt
-function maxHits(i) { return hard[i] ? ROCK_HP : DIRT_HP; }
+// how many bites a block needs to break: big rock > grey rock > soft dirt
+function maxHits(i) { return hard[i] === 2 ? BIGROCK_HP : hard[i] ? ROCK_HP : DIRT_HP; }
 
 // reveal one tile: mark it visible now, and remember + stamp it the first time
 function reveal(i, c, r) {

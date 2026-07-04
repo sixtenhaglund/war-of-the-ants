@@ -24,12 +24,15 @@ function draw() {
       const x = c * TILE, y = r * TILE;
 
       if (grid[i]) {                             // a solid block
-        const rock = hard[i];                    // tough rock (grey) vs dirt (brown)
-        ctx.fillStyle = rock ? '#565662' : '#5a4325';
+        // colour by tier: big rock (dark) > grey rock > brown dirt
+        const col = hard[i] === 2 ? ['#3a3a48', '#4c4c5e', '#20202a']
+                  : hard[i]        ? ['#565662', '#6c6c7a', '#33333c']
+                  :                  ['#5a4325', '#6b5230', '#3a2b16'];
+        ctx.fillStyle = col[0];
         ctx.fillRect(x, y, TILE, TILE);
-        ctx.fillStyle = rock ? '#6c6c7a' : '#6b5230';
+        ctx.fillStyle = col[1];
         ctx.fillRect(x + 3, y + 3, TILE - 8, TILE - 8);
-        ctx.strokeStyle = rock ? '#33333c' : '#3a2b16';
+        ctx.strokeStyle = col[2];
         ctx.strokeRect(x + 0.5, y + 0.5, TILE, TILE);
         if (hits[i] > 0) {                        // darker per break stage (saved damage)
           ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * (hits[i] / maxHits(i))) + ')';
