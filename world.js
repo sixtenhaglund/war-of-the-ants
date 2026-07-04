@@ -41,7 +41,7 @@ function buildWorld() {
     // spare, so no cave can ever touch the nest and be revealed before you've
     // dug a tunnel to it. (Bump this if caves get bigger again.)
     if (Math.hypot(ccx - cx, ccy - cy) < roomRadius + 490) continue;
-    const rad = 1 + Math.floor(Math.random() * 5);         // 1 (small) … 5 (big) tiles
+    const rad = 2 + Math.floor(Math.random() * 4);         // 2 (small) … 5 (big) tiles
 
     // RARE big caves: usually one blob, but ~12% of the time it's 2–3 blobs
     // clustered together (offset & overlapping) → one big, irregular cavern.
