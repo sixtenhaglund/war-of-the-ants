@@ -30,25 +30,32 @@ function buildWorld() {
     const cc = 3 + Math.floor(Math.random() * (COLS - 6));
     const cr = 3 + Math.floor(Math.random() * (ROWS - 6));
     const ccx = cc * TILE + TILE / 2, ccy = cr * TILE + TILE / 2;
-    // keep caves off the nest: nest radius (130) + a big cave's reach (~270) +
-    // rock to spare, so no cave can ever touch the nest and be revealed before
-    // you've dug a tunnel to it. (Bump this if caves get bigger again.)
-    if (Math.hypot(ccx - cx, ccy - cy) < roomRadius + 420) continue;
+    // keep caves off the nest: nest radius (130) + a big cave's reach + rock to
+    // spare, so no cave can ever touch the nest and be revealed before you've
+    // dug a tunnel to it. (Bump this if caves get bigger again.)
+    if (Math.hypot(ccx - cx, ccy - cy) < roomRadius + 490) continue;
     const rad = 1 + Math.floor(Math.random() * 5);         // 1 (small) … 5 (big) tiles
+
+    // RARE big caves: usually one blob, but ~12% of the time it's 2–3 blobs
+    // clustered together (offset & overlapping) → one big, irregular cavern.
+    const lobes = Math.random() < 0.12 ? 2 + Math.floor(Math.random() * 2) : 1;
+    const spread = lobes > 1 ? Math.round(rad * 0.7) : 0;  // how far the extra blobs sit out
+    const reach = rad + spread + 1;                        // farthest this cave's rock could open
+
     // keep caves APART: skip this spot if the new cave would touch an already
-    // placed one, so they never merge into one map-swallowing cavern. The +3
-    // leaves a few tiles of solid rock between every pair of caves.
+    // placed one, so separate caves never merge into a map-swallowing cavern.
+    // (Uses each cave's reach, so bigger caves reserve more room.)
     let tooClose = false;
     for (const p of placed) {
-      if (Math.hypot(cc - p.cc, cr - p.cr) < rad + p.rad + 3) { tooClose = true; break; }
+      if (Math.hypot(cc - p.cc, cr - p.cr) < reach + p.reach + 1) { tooClose = true; break; }
     }
     if (tooClose) continue;
-    placed.push({ cc, cr, rad });
-    for (let c = cc - rad; c <= cc + rad; c++)
-      for (let r = cr - rad; r <= cr + rad; r++) {
-        if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) continue;
-        if (Math.hypot(c - cc, r - cr) <= rad + Math.random() * 0.7) grid[r * COLS + c] = false;
-      }
+    placed.push({ cc, cr, reach });
+
+    carveBlob(cc, cr, rad);                                // the main blob
+    for (let l = 1; l < lobes; l++)                        // extra blobs for a rare big cave
+      carveBlob(cc + Math.round(rand(-spread, spread)), cr + Math.round(rand(-spread, spread)), rad);
+
     const count = 1 + Math.floor(Math.random() * 5);       // 1–5 beetles per cave
     for (let k = 0; k < count; k++) {
       beetles.push({
@@ -64,6 +71,21 @@ function buildWorld() {
   if (DEBUG_SEE_ALL)
     for (let c = 0; c < COLS; c++)
       for (let r = 0; r < ROWS; r++) stampMini(c, r);
+}
+
+// carve ONE cave blob: a squashed, randomly-rotated oval with a rough edge, so
+// caves aren't all perfect circles. (bcx,bcy) is the blob centre, in tiles.
+function carveBlob(bcx, bcy, rad) {
+  const rx = rad, ry = Math.max(1, rad * rand(0.55, 1));   // squash one axis → an oval
+  const rot = rand(0, Math.PI), cs = Math.cos(rot), sn = Math.sin(rot);
+  const reach = Math.ceil(rad) + 1;
+  for (let c = bcx - reach; c <= bcx + reach; c++)
+    for (let r = bcy - reach; r <= bcy + reach; r++) {
+      if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) continue;
+      const dx = c - bcx, dy = r - bcy;
+      const x = dx * cs + dy * sn, y = -dx * sn + dy * cs;  // rotate into the oval's frame
+      if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1 + Math.random() * 0.25) grid[r * COLS + c] = false;
+    }
 }
 
 // is the world point (px,py) inside a solid block?
