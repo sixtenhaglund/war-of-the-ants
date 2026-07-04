@@ -22,6 +22,10 @@ function draw() {
   const r0 = Math.max(0, Math.floor((cam.y - halfH) / TILE));
   const r1 = Math.min(ROWS - 1, Math.ceil((cam.y + halfH) / TILE));
 
+  // zoomed out → far more tiles on screen; skip the fine per-tile detail (insets
+  // and stroked borders are the pricey part and are barely visible when small).
+  const detail = cam.zoom >= 1.05;
+
   for (let c = c0; c <= c1; c++) {
     for (let r = r0; r <= r1; r++) {
       const i = r * COLS + c;
@@ -31,6 +35,19 @@ function draw() {
       if (grid[i]) {                             // a solid block
         // colour by tier: big rock (dark) > grey rock > brown dirt
         const col = hard[i] === 2 ? COL_BIGROCK : hard[i] ? COL_ROCK : COL_DIRT;
+
+        if (!detail) {                           // zoomed out → one flat square, no borders
+          ctx.fillStyle = col[1];
+          ctx.fillRect(x, y, TILE, TILE);
+          const dmg = hard[i] === 2 && bigId[i] >= 0 ? hits[bigId[i]] / BIGROCK_HP : hits[i] / maxHits(i);
+          if (dmg > 0) {
+            ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * dmg) + ')';
+            ctx.fillRect(x, y, TILE, TILE);
+          }
+          if (!visible[i]) { ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x, y, TILE, TILE); }
+          continue;                              // done with this tile
+        }
+
         ctx.fillStyle = col[0];
         ctx.fillRect(x, y, TILE, TILE);
         if (hard[i] === 2) {
