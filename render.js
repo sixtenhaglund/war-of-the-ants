@@ -64,8 +64,16 @@ function draw() {
           }
         }
       } else {                                    // open floor
-        ctx.fillStyle = '#2a1e0e';
+        ctx.fillStyle = grass[i] ? '#26240f' : '#2a1e0e';   // grassy ground vs bare dirt
         ctx.fillRect(x, y, TILE, TILE);
+        if (grass[i]) {                            // flat grass flecks (fixed per tile)
+          ctx.fillStyle = '#3f6b2e';
+          for (let g = 0; g < 4; g++) {
+            const gx = x + 4 + ((c * 13 + g * 11) % (TILE - 8));
+            const gy = y + 4 + ((r * 17 + g * 7) % (TILE - 8));
+            ctx.fillRect(gx, gy, 2, 2);
+          }
+        }
       }
 
       if (!visible[i]) {                          // explored but not in sight → dim
@@ -181,15 +189,7 @@ function drawPlant(p) {
   ctx.translate(p.x, p.y);
   ctx.scale(0.8 + p.seed * 0.5, 0.8 + p.seed * 0.5);   // slight size variety per plant
 
-  if (p.type === 'grass') {
-    ctx.strokeStyle = '#4c8a3a'; ctx.lineWidth = 1.5;
-    for (let k = -2; k <= 2; k++) {                // a little fan of blades
-      ctx.beginPath();
-      ctx.moveTo(k * 2, 3);
-      ctx.lineTo(k * 2 + k * 0.8, -5 - (2 - Math.abs(k)) * 1.5);
-      ctx.stroke();
-    }
-  } else if (p.type === 'bush') {
+  if (p.type === 'bush') {
     ctx.fillStyle = '#2f6b2c';                     // clump of round leaves
     for (const [ox, oy, r] of [[-4, 1, 5], [4, 1, 5], [0, -3, 6], [0, 2, 5]]) {
       ctx.beginPath(); ctx.arc(ox, oy, r, 0, 6.28); ctx.fill();

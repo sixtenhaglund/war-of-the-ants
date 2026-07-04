@@ -6,6 +6,7 @@ function buildWorld() {
   hard = new Uint8Array(COLS * ROWS);
   hits = new Uint8Array(COLS * ROWS);
   bigId = new Int32Array(COLS * ROWS).fill(-1);
+  grass = new Uint8Array(COLS * ROWS);
   explored = new Uint8Array(COLS * ROWS);
   visible  = new Uint8Array(COLS * ROWS);
   for (let i = 0; i < hard.length; i++) if (Math.random() < ROCK_CHANCE) hard[i] = 1;
@@ -87,16 +88,26 @@ function buildWorld() {
       });
     }
 
-    // scatter little plants across the cave floor: mostly grass, some bushes,
-    // and the odd berry plant you can pick from.
+    // dress the cave floor: grassy-ground patches (a floor type), plus some
+    // standing bushes and the odd pick-able berry plant.
     const plantN = 3 + Math.floor(Math.random() * rad * 2);
     for (let k = 0; k < plantN; k++) {
       const px = ccx + rand(-rad * 30, rad * 30);
       const py = ccy + rand(-rad * 30, rad * 30);
       if (isRock(px, py)) continue;                        // only on open floor
       const roll = Math.random();
-      const type = roll < 0.6 ? 'grass' : roll < 0.85 ? 'bush' : 'berry';
-      plants.push({ x: px, y: py, type, picked: false, seed: Math.random() });
+      if (roll < 0.55) {                                   // GRASS = a patch of grassy floor
+        const gc = Math.floor(px / TILE), gr = Math.floor(py / TILE);
+        const grad = 1 + Math.floor(Math.random() * 2);    // small 1–2 tile blob
+        for (let c = gc - grad; c <= gc + grad; c++)
+          for (let r = gr - grad; r <= gr + grad; r++) {
+            if (c < 0 || r < 0 || c >= COLS || r >= ROWS) continue;
+            if (!grid[r * COLS + c] && Math.hypot(c - gc, r - gr) <= grad) grass[r * COLS + c] = 1;
+          }
+      } else {                                             // a standing plant
+        const type = roll < 0.8 ? 'bush' : 'berry';
+        plants.push({ x: px, y: py, type, picked: false, seed: Math.random() });
+      }
     }
   }
 
