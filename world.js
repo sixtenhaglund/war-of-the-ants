@@ -67,18 +67,29 @@ function reveal(i, c, r) {
   if (!explored[i]) { explored[i] = 1; stampMini(c, r); }
 }
 
-// VISION RULE: you only see open space that is CONNECTED to the queen through
-// other open tiles (a flood fill), plus the rock walls touching it — all within
-// the REVEAL radius. So a cave sealed behind rock stays hidden until you dig a
-// tunnel that actually links it to where you are.
+// VISION RULE: you see any tile within the REVEAL radius that is part of your
+// CONNECTED tunnel network — even straight through a wall — plus the rock walls
+// touching it. Two separate questions:
+//   1) is it connected?  → follow the whole network (a flood fill, no distance
+//      limit on the *following*), so we know every tile that's really yours.
+//   2) should it light up? → only if it's within REVEAL of the queen.
+// A cave sealed behind rock is never reached by the flood, so it stays hidden
+// until you dig a tunnel that links it into your network.
 function updateFog() {
   visible.fill(0);
   const maxD2 = REVEAL * REVEAL;
   const qc = Math.floor(queen.x / TILE), qr = Math.floor(queen.y / TILE);
   if (qc < 0 || qr < 0 || qc >= COLS || qr >= ROWS) return;
 
+  const inRange = (nc, nr) => {
+    const x = nc * TILE + TILE / 2, y = nr * TILE + TILE / 2;
+    return (x - queen.x) ** 2 + (y - queen.y) ** 2 <= maxD2;
+  };
+
   const start = qr * COLS + qc;
+  const queued = new Uint8Array(COLS * ROWS);   // BFS visited (the whole network)
   const queue = [start];
+  queued[start] = 1;
   reveal(start, qc, qr);
 
   for (let head = 0; head < queue.length; head++) {
@@ -90,18 +101,15 @@ function updateFog() {
         const nc = c + dc, nr = r + dr;
         if (nc < 0 || nr < 0 || nc >= COLS || nr >= ROWS) continue;
         const ni = nr * COLS + nc;
-        if (visible[ni]) continue;
-        const x = nc * TILE + TILE / 2, y = nr * TILE + TILE / 2;
-        if ((x - queen.x) ** 2 + (y - queen.y) ** 2 > maxD2) continue;  // out of range
         if (grid[ni]) {
-          reveal(ni, nc, nr);            // a rock wall we can see (don't dig through it here)
+          if (inRange(nc, nr)) reveal(ni, nc, nr);   // a rock wall we can see, if close
         } else {
-          // an open tile → the flood spreads into it. For a DIAGONAL step, only
-          // pass if at least one side tile is also open — never squeeze through a
-          // corner between two solid rocks (that would peek through a wall).
+          // an open tile → part of the network. For a DIAGONAL step, only pass if
+          // at least one side tile is also open — never squeeze the flood through a
+          // corner between two solid rocks (that would link tunnels that aren't).
           if (dc !== 0 && dr !== 0 && grid[r * COLS + nc] && grid[nr * COLS + c]) continue;
-          reveal(ni, nc, nr);            // open tile, connected → flood on
-          queue.push(ni);
+          if (inRange(nc, nr)) reveal(ni, nc, nr);   // connected AND close → light it up
+          if (!queued[ni]) { queued[ni] = 1; queue.push(ni); }  // follow the network on
         }
       }
     }
