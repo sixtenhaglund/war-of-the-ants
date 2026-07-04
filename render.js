@@ -30,10 +30,27 @@ function draw() {
                   :                  ['#5a4325', '#6b5230', '#3a2b16'];
         ctx.fillStyle = col[0];
         ctx.fillRect(x, y, TILE, TILE);
-        ctx.fillStyle = col[1];
-        ctx.fillRect(x + 3, y + 3, TILE - 8, TILE - 8);
-        ctx.strokeStyle = col[2];
-        ctx.strokeRect(x + 0.5, y + 0.5, TILE, TILE);
+        if (hard[i] === 2) {
+          // BIG ROCK: only inset/border the edges that face NON-big-rock, so
+          // touching big-rock tiles merge into one chunky 2×2-sized block.
+          const bT = isBigRock(c, r - 1), bB = isBigRock(c, r + 1),
+                bL = isBigRock(c - 1, r), bR = isBigRock(c + 1, r);
+          const l = bL ? 0 : 3, t = bT ? 0 : 3, rr = bR ? 0 : 3, bb = bB ? 0 : 3;
+          ctx.fillStyle = col[1];
+          ctx.fillRect(x + l, y + t, TILE - l - rr, TILE - t - bb);
+          ctx.strokeStyle = col[2]; ctx.lineWidth = 1;
+          ctx.beginPath();                         // outline only the outer edges
+          if (!bT) { ctx.moveTo(x + 0.5, y + 0.5); ctx.lineTo(x + TILE + 0.5, y + 0.5); }
+          if (!bB) { ctx.moveTo(x + 0.5, y + TILE + 0.5); ctx.lineTo(x + TILE + 0.5, y + TILE + 0.5); }
+          if (!bL) { ctx.moveTo(x + 0.5, y + 0.5); ctx.lineTo(x + 0.5, y + TILE + 0.5); }
+          if (!bR) { ctx.moveTo(x + TILE + 0.5, y + 0.5); ctx.lineTo(x + TILE + 0.5, y + TILE + 0.5); }
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = col[1];
+          ctx.fillRect(x + 3, y + 3, TILE - 8, TILE - 8);
+          ctx.strokeStyle = col[2];
+          ctx.strokeRect(x + 0.5, y + 0.5, TILE, TILE);
+        }
         if (hits[i] > 0) {                        // darker per break stage (saved damage)
           ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * (hits[i] / maxHits(i))) + ')';
           ctx.fillRect(x, y, TILE, TILE);

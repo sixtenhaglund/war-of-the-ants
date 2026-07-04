@@ -105,6 +105,13 @@ function isRock(px, py) {
 // how many bites a block needs to break: big rock > grey rock > soft dirt
 function maxHits(i) { return hard[i] === 2 ? BIGROCK_HP : hard[i] ? ROCK_HP : DIRT_HP; }
 
+// is the tile at (c,r) a solid big-rock block? (used to merge touching big rocks)
+function isBigRock(c, r) {
+  if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return false;
+  const i = r * COLS + c;
+  return grid[i] && hard[i] === 2;
+}
+
 // reveal one tile: mark it visible now, and remember + stamp it the first time
 function reveal(i, c, r) {
   visible[i] = 1;
