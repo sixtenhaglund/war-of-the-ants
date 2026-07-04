@@ -64,16 +64,8 @@ function draw() {
           }
         }
       } else {                                    // open floor
-        ctx.fillStyle = grass[i] ? '#2f8a34' : '#2a1e0e';   // grassy ground vs bare dirt
+        ctx.fillStyle = '#2a1e0e';
         ctx.fillRect(x, y, TILE, TILE);
-        if (grass[i]) {                            // flat grass flecks (fixed per tile)
-          ctx.fillStyle = '#3fa845';
-          for (let g = 0; g < 4; g++) {
-            const gx = x + 4 + ((c * 13 + g * 11) % (TILE - 8));
-            const gy = y + 4 + ((r * 17 + g * 7) % (TILE - 8));
-            ctx.fillRect(gx, gy, 2, 2);
-          }
-        }
       }
 
       if (!visible[i]) {                          // explored but not in sight → dim
@@ -82,8 +74,6 @@ function draw() {
       }
     }
   }
-
-  drawPlants();                                   // cave grass, bushes, berries
 
   // food pile in the nest (once you've seen that spot)
   const fpc = Math.floor(foodPile.x / TILE), fpr = Math.floor(foodPile.y / TILE);
@@ -103,18 +93,11 @@ function draw() {
 
   drawQueen();
 
-  if (carrying) {                                 // whatever's held in her mouth
+  if (carrying) {                                 // the beetle held in her mouth
     ctx.save();
     ctx.translate(queen.x, queen.y);
     ctx.rotate(queen.angle);
-    if (carrying.kind === 'berry') {
-      ctx.fillStyle = '#d23b3b';                  // a berry in her jaws
-      ctx.beginPath(); ctx.arc(16, 0, 4, 0, 6.28); ctx.fill();
-      ctx.fillStyle = '#f07a68';
-      ctx.beginPath(); ctx.arc(14.8, -1.3, 1.4, 0, 6.28); ctx.fill();
-    } else {
-      drawBeetle(16, 0, 0, true, true);           // a beetle in her jaws
-    }
+    drawBeetle(16, 0, 0, true, true);             // out front, in her jaws
     ctx.restore();
   }
 
@@ -179,41 +162,4 @@ function drawMinimap() {
     ctx.fillText('Press M to close', W / 2, oy + dh + 26);
     ctx.textAlign = 'left';                        // reset so other text isn't centred
   }
-}
-
-// ---- cave plants: grass tufts, bushes, and pick-able berry plants ----
-function drawPlants() {
-  for (const p of plants) {
-    const pc = Math.floor(p.x / TILE), pr = Math.floor(p.y / TILE);
-    if (pc < 0 || pr < 0 || pc >= COLS || pr >= ROWS) continue;
-    if (!visible[pr * COLS + pc]) continue;        // only where the queen can see
-    drawPlant(p);
-  }
-}
-
-function drawPlant(p) {
-  ctx.save();
-  ctx.translate(p.x, p.y);
-  ctx.scale(0.8 + p.seed * 0.5, 0.8 + p.seed * 0.5);   // slight size variety per plant
-
-  if (p.type === 'bush') {
-    ctx.fillStyle = '#2f6b2c';                     // clump of round leaves
-    for (const [ox, oy, r] of [[-4, 1, 5], [4, 1, 5], [0, -3, 6], [0, 2, 5]]) {
-      ctx.beginPath(); ctx.arc(ox, oy, r, 0, 6.28); ctx.fill();
-    }
-    ctx.fillStyle = '#3c8a37';                     // lighter highlight on top
-    ctx.beginPath(); ctx.arc(-1, -2, 4, 0, 6.28); ctx.fill();
-  } else {                                         // berry plant
-    ctx.fillStyle = '#2f6b2c';                     // small green plant
-    for (const [ox, oy] of [[-4, 1], [4, 1], [0, -3]]) {
-      ctx.beginPath(); ctx.arc(ox, oy, 4.5, 0, 6.28); ctx.fill();
-    }
-    if (!p.picked) {                               // the pickable berry (gone once taken)
-      ctx.fillStyle = '#d23b3b';
-      ctx.beginPath(); ctx.arc(0, -5, 3.4, 0, 6.28); ctx.fill();
-      ctx.fillStyle = '#f07a68';                   // shine
-      ctx.beginPath(); ctx.arc(-1.1, -6, 1.1, 0, 6.28); ctx.fill();
-    }
-  }
-  ctx.restore();
 }

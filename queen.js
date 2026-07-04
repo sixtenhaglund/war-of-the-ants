@@ -62,15 +62,6 @@ function chompDamage() {
     }
   }
 
-  // a berry plant in front? bite it to take the berry into your mouth
-  for (const p of plants) {
-    if (p.type === 'berry' && !p.picked && Math.hypot(p.x - fx, p.y - fy) < 16) {
-      p.picked = true;
-      carrying = { kind: 'berry', food: 1, plant: p };   // carried like a beetle
-      return;                                            // a bite lands on one thing
-    }
-  }
-
   // otherwise chew the rock in front
   const c = Math.floor(fx / TILE), r = Math.floor(fy / TILE);
   if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) return;

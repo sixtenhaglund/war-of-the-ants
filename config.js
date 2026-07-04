@@ -18,12 +18,10 @@ let grid;                 // grid[r*COLS+c] === true  → a solid block
 let hard;                 // 1 if that block is tough ROCK, 0 if DIRT
 let hits;                 // how many bites this block has taken (saved!)
 let bigId;                // for a 2×2 big-rock tile: its block's top-left index (else -1)
-let grass;                // open-floor ground type: 1 = grassy floor, 0 = bare dirt
 let explored, visible;    // fog: seen-before? / seen right now?
 let beetles = [];         // bugs living in the caves
 let carrying = null;      // the dead beetle the queen is hauling (or null)
 let foodCount = 0;        // beetles delivered to the nest food pile
-let plants = [];          // cave decorations: bushes and berry plants
 let particles = [];       // blood droplets etc.
 let W, H;                 // screen size
 let running = false;

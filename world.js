@@ -6,7 +6,6 @@ function buildWorld() {
   hard = new Uint8Array(COLS * ROWS);
   hits = new Uint8Array(COLS * ROWS);
   bigId = new Int32Array(COLS * ROWS).fill(-1);
-  grass = new Uint8Array(COLS * ROWS);
   explored = new Uint8Array(COLS * ROWS);
   visible  = new Uint8Array(COLS * ROWS);
   for (let i = 0; i < hard.length; i++) if (Math.random() < ROCK_CHANCE) hard[i] = 1;
@@ -43,7 +42,6 @@ function buildWorld() {
 
   // scatter open CAVES through the rock — some small, some big — with beetles.
   beetles = [];
-  plants = [];
   carrying = null;
   foodCount = 0;
   const placed = [];                            // caves already dropped, so new ones keep their distance
@@ -87,25 +85,6 @@ function buildWorld() {
       });
     }
 
-    // dress the cave floor with standing bushes and pick-able berry plants;
-    // grassy ground spreads ~2 tiles around each bush so they sit in grass.
-    const plantN = 3 + Math.floor(Math.random() * rad * 2);
-    for (let k = 0; k < plantN; k++) {
-      const px = ccx + rand(-rad * 30, rad * 30);
-      const py = ccy + rand(-rad * 30, rad * 30);
-      if (isRock(px, py)) continue;                        // only on open floor
-      const type = Math.random() < 0.7 ? 'bush' : 'berry';
-      plants.push({ x: px, y: py, type, picked: false, seed: Math.random() });
-
-      if (type === 'bush') {                               // paint grass around the bush
-        const gc = Math.floor(px / TILE), gr = Math.floor(py / TILE), grad = 2;
-        for (let c = gc - grad; c <= gc + grad; c++)
-          for (let r = gr - grad; r <= gr + grad; r++) {
-            if (c < 0 || r < 0 || c >= COLS || r >= ROWS) continue;
-            if (!grid[r * COLS + c] && Math.hypot(c - gc, r - gr) <= grad + 0.4) grass[r * COLS + c] = 1;
-          }
-      }
-    }
   }
 
   // dig thin TUNNELS linking nearby caves into networks: each cave connects to

@@ -48,7 +48,7 @@ function update(dt) {
   }
   // drop whatever you're carrying on the nest food pile → it becomes food
   if (carrying && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
-    foodCount += carrying.food;                 // beetle = 2, berry = 1
+    foodCount += carrying.food;                 // a beetle is worth 2 food
     if (carrying.beetle) carrying.beetle.gone = true;
     carrying = null;
     document.getElementById('score').textContent = '🪲 Food: ' + foodCount;
