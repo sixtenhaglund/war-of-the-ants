@@ -143,15 +143,12 @@ function connectBigRocks() {
 }
 
 // carve a thin TUNNEL of open floor from (c0,r0) to (c1,r1), `thick` tiles wide.
-// Walks along the straight line and hollows a small square at each step. Never
-// digs near the nest, so caves can't get secretly connected to the queen.
+// Walks ONE tile at a time in x or y (never a diagonal jump), so the path is
+// always ORTHOGONALLY connected — a walkable staircase, not a corner-only chain
+// the queen can't fit through. Never digs near the nest (keeps it sealed).
 function carveTunnel(c0, r0, c1, r1, thick) {
-  const steps = Math.ceil(Math.hypot(c1 - c0, r1 - r0));
   const midC = COLS / 2, midR = ROWS / 2;
-  for (let s = 0; s <= steps; s++) {
-    const t = s / steps;
-    const bc = Math.round(c0 + (c1 - c0) * t);
-    const br = Math.round(r0 + (r1 - r0) * t);
+  const dig = (bc, br) => {
     for (let dc = 0; dc < thick; dc++)
       for (let dr = 0; dr < thick; dr++) {
         const c = bc + dc, r = br + dr;
@@ -159,6 +156,13 @@ function carveTunnel(c0, r0, c1, r1, thick) {
         if (Math.hypot(c - midC, r - midR) < 6) continue;   // keep the nest sealed
         grid[r * COLS + c] = false;
       }
+  };
+  let c = c0, r = r0;
+  dig(c, r);
+  while (c !== c1 || r !== r1) {
+    if (c !== c1 && (Math.abs(c1 - c) >= Math.abs(r1 - r) || r === r1)) c += c < c1 ? 1 : -1;
+    else r += r < r1 ? 1 : -1;                              // step whichever axis is farther
+    dig(c, r);
   }
 }
 
