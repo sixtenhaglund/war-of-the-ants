@@ -29,21 +29,21 @@ function buildWorld() {
     const cc = 3 + Math.floor(Math.random() * (COLS - 6));
     const cr = 3 + Math.floor(Math.random() * (ROWS - 6));
     const ccx = cc * TILE + TILE / 2, ccy = cr * TILE + TILE / 2;
-    // keep caves off the nest: nest radius (130) + a big cave's reach (~230) +
+    // keep caves off the nest: nest radius (130) + a big cave's reach (~360) +
     // one full tile of rock, so no cave can ever touch the nest and be revealed
-    // before you've dug a tunnel to it.
-    if (Math.hypot(ccx - cx, ccy - cy) < roomRadius + 290) continue;
-    const rad = 1 + Math.floor(Math.random() * 4);         // 1 (small) … 4 (big) tiles
+    // before you've dug a tunnel to it. (Bump this if caves get bigger again.)
+    if (Math.hypot(ccx - cx, ccy - cy) < roomRadius + 420) continue;
+    const rad = 2 + Math.floor(Math.random() * 6);         // 2 (small) … 7 (big) tiles
     for (let c = cc - rad; c <= cc + rad; c++)
       for (let r = cr - rad; r <= cr + rad; r++) {
         if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) continue;
         if (Math.hypot(c - cc, r - cr) <= rad + Math.random() * 0.7) grid[r * COLS + c] = false;
       }
-    const count = 1 + Math.floor(Math.random() * rad);     // bigger caves → more beetles
+    const count = 2 + Math.floor(Math.random() * rad * 2); // bigger caves → more beetles
     for (let k = 0; k < count; k++) {
       beetles.push({
-        x: ccx + rand(-rad * 16, rad * 16),
-        y: ccy + rand(-rad * 16, rad * 16),
+        x: ccx + rand(-rad * 22, rad * 22),
+        y: ccy + rand(-rad * 22, rad * 22),
         hp: BEETLE_HP, angle: rand(0, 6.28), wanderT: 0,
         dead: false, carried: false, gone: false,
       });
