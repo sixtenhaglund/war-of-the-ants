@@ -127,12 +127,14 @@ function drawMinimap() {
   ctx.imageSmoothingEnabled = false;              // crisp pixels, not blurry
   ctx.drawImage(mini, ox, oy, dw, dh);            // the cached explored map, scaled up
 
-  // markers snap to the SAME grid as the map: each fills one whole tile cell,
-  // aligned to the tile the creature stands on (just like the 1px-per-tile map).
-  const cell = Math.ceil(sc);
+  // markers snap to the SAME grid as the map: each fills exactly one tile pixel,
+  // using the same rounded edges the scaled map image uses for that tile — so a
+  // marker is the same size as a normal minimap pixel.
   const markTile = (tc, tr, colour) => {
+    const x0 = Math.round(ox + tc * sc), x1 = Math.round(ox + (tc + 1) * sc);
+    const y0 = Math.round(oy + tr * sc), y1 = Math.round(oy + (tr + 1) * sc);
     ctx.fillStyle = colour;
-    ctx.fillRect(Math.floor(ox + tc * sc), Math.floor(oy + tr * sc), cell, cell);
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
   };
 
   // creatures: enemies = red, passive beetles = blue — but only the ones you've
