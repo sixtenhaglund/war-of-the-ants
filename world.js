@@ -201,31 +201,33 @@ function reveal(i, c, r) {
 // VISION RULE: you see any tile within the REVEAL radius that is part of your
 // CONNECTED tunnel network — even straight through a wall — plus the rock walls
 // touching it. Two separate questions:
-//   1) is it connected?  → follow the whole network (a flood fill, no distance
-//      limit on the *following*), so we know every tile that's really yours.
+//   1) is it connected?  → flood through open tiles from the queen.
 //   2) should it light up? → only if it's within REVEAL of the queen.
-// A cave sealed behind rock is never reached by the flood, so it stays hidden
-// until you dig a tunnel that links it into your network.
+// A cave sealed behind rock is never reached by the flood, so it stays hidden.
+// The flood is bounded to a local region (2× REVEAL) around the queen so we don't
+// re-walk the whole dug map every frame — that's plenty to see connected tunnels
+// through nearby walls.
+let fogQueued = null;                             // reused BFS visited buffer (no per-frame alloc)
+const fogQueue = [];                              // reused BFS queue
 function updateFog() {
   if (DEBUG_SEE_ALL) { visible.fill(1); explored.fill(1); return; }  // ⚠ debug: see everything
   visible.fill(0);
-  const maxD2 = REVEAL * REVEAL;
+  if (!fogQueued || fogQueued.length !== COLS * ROWS) fogQueued = new Uint8Array(COLS * ROWS);
+  else fogQueued.fill(0);
+
+  const maxD2 = REVEAL * REVEAL;                  // light up within this
+  const propD2 = (REVEAL * 2) * (REVEAL * 2);     // but only flood within this local region
   const qc = Math.floor(queen.x / TILE), qr = Math.floor(queen.y / TILE);
   if (qc < 0 || qr < 0 || qc >= COLS || qr >= ROWS) return;
 
-  const inRange = (nc, nr) => {
-    const x = nc * TILE + TILE / 2, y = nr * TILE + TILE / 2;
-    return (x - queen.x) ** 2 + (y - queen.y) ** 2 <= maxD2;
-  };
-
   const start = qr * COLS + qc;
-  const queued = new Uint8Array(COLS * ROWS);   // BFS visited (the whole network)
-  const queue = [start];
-  queued[start] = 1;
+  fogQueue.length = 0;
+  fogQueue.push(start);
+  fogQueued[start] = 1;
   reveal(start, qc, qr);
 
-  for (let head = 0; head < queue.length; head++) {
-    const i = queue[head];
+  for (let head = 0; head < fogQueue.length; head++) {
+    const i = fogQueue[head];
     const c = i % COLS, r = (i - c) / COLS;
     for (let dc = -1; dc <= 1; dc++) {
       for (let dr = -1; dr <= 1; dr++) {
@@ -233,15 +235,19 @@ function updateFog() {
         const nc = c + dc, nr = r + dr;
         if (nc < 0 || nr < 0 || nc >= COLS || nr >= ROWS) continue;
         const ni = nr * COLS + nc;
+        const x = nc * TILE + TILE / 2 - queen.x, y = nr * TILE + TILE / 2 - queen.y;
+        const d2 = x * x + y * y;
+        if (d2 > propD2) continue;                 // outside the local flood region
         if (grid[ni]) {
-          if (inRange(nc, nr)) reveal(ni, nc, nr);   // a rock wall we can see, if close
+          if (d2 <= maxD2 && !visible[ni]) reveal(ni, nc, nr);   // a rock wall we can see, if close
         } else {
-          // an open tile → part of the network. For a DIAGONAL step, only pass if
-          // at least one side tile is also open — never squeeze the flood through a
-          // corner between two solid rocks (that would link tunnels that aren't).
+          if (fogQueued[ni]) continue;             // this open tile is already handled
+          // DIAGONAL step: only pass if a side tile is also open — never squeeze the
+          // flood through a corner between two solid rocks (would link separate tunnels).
           if (dc !== 0 && dr !== 0 && grid[r * COLS + nc] && grid[nr * COLS + c]) continue;
-          if (inRange(nc, nr)) reveal(ni, nc, nr);   // connected AND close → light it up
-          if (!queued[ni]) { queued[ni] = 1; queue.push(ni); }  // follow the network on
+          fogQueued[ni] = 1;
+          fogQueue.push(ni);                       // follow the network on
+          if (d2 <= maxD2) reveal(ni, nc, nr);     // connected AND close → light it up
         }
       }
     }

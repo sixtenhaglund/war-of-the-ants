@@ -1,5 +1,10 @@
 /* Rendering: the world through the camera, plus the minimap. */
 
+// tile colour tiers [base, face, outline] — defined once, not rebuilt per tile
+const COL_DIRT    = ['#5a4325', '#6b5230', '#3a2b16'];
+const COL_ROCK    = ['#565662', '#6c6c7a', '#33333c'];
+const COL_BIGROCK = ['#3a3a48', '#4c4c5e', '#20202a'];
+
 function draw() {
   ctx.fillStyle = '#000';                        // unexplored world stays black
   ctx.fillRect(0, 0, W, H);
@@ -25,9 +30,7 @@ function draw() {
 
       if (grid[i]) {                             // a solid block
         // colour by tier: big rock (dark) > grey rock > brown dirt
-        const col = hard[i] === 2 ? ['#3a3a48', '#4c4c5e', '#20202a']
-                  : hard[i]        ? ['#565662', '#6c6c7a', '#33333c']
-                  :                  ['#5a4325', '#6b5230', '#3a2b16'];
+        const col = hard[i] === 2 ? COL_BIGROCK : hard[i] ? COL_ROCK : COL_DIRT;
         ctx.fillStyle = col[0];
         ctx.fillRect(x, y, TILE, TILE);
         if (hard[i] === 2) {
