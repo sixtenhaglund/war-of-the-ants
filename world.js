@@ -9,13 +9,21 @@ function buildWorld() {
   explored = new Uint8Array(COLS * ROWS);
   visible  = new Uint8Array(COLS * ROWS);
   for (let i = 0; i < hard.length; i++) if (Math.random() < ROCK_CHANCE) hard[i] = 1;
-  // scatter tough 2×2 BIG ROCK patches. We only MARK the tiles here; which tiles
-  // actually form one block is worked out later (connectBigRocks) by joining
-  // orthogonal neighbours — so patches that land edge-to-edge become one bigger
-  // block, while diagonal ones stay separate.
+  // scatter tough 2×2 BIG ROCK patches, kept as clean SEPARATE blocks: skip any
+  // spot that would overlap or ORTHOGONALLY touch an existing big block (those
+  // tiles just stay ordinary dirt/rock). Diagonal/corner contact is allowed, so
+  // two big blocks can still sit corner-to-corner.
+  const bigAt = (cc, rr) => cc >= 0 && rr >= 0 && cc < COLS && rr < ROWS && hard[rr * COLS + cc] === 2;
   for (let n = 0; n < BIGROCK_COUNT; n++) {
     const c = 1 + Math.floor(Math.random() * (COLS - 3));
     const r = 1 + Math.floor(Math.random() * (ROWS - 3));
+    let clear = true;
+    for (let dc = -1; dc <= 2 && clear; dc++)
+      for (let dr = -1; dr <= 2 && clear; dr++) {
+        if ((dc === -1 || dc === 2) && (dr === -1 || dr === 2)) continue;   // ignore diagonal corners
+        if (bigAt(c + dc, r + dr)) clear = false;
+      }
+    if (!clear) continue;
     for (let dc = 0; dc < 2; dc++)
       for (let dr = 0; dr < 2; dr++) hard[(r + dr) * COLS + (c + dc)] = 2;
   }
