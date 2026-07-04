@@ -87,25 +87,23 @@ function buildWorld() {
       });
     }
 
-    // dress the cave floor: grassy-ground patches (a floor type), plus some
-    // standing bushes and the odd pick-able berry plant.
+    // dress the cave floor with standing bushes and pick-able berry plants;
+    // grassy ground spreads ~2 tiles around each bush so they sit in grass.
     const plantN = 3 + Math.floor(Math.random() * rad * 2);
     for (let k = 0; k < plantN; k++) {
       const px = ccx + rand(-rad * 30, rad * 30);
       const py = ccy + rand(-rad * 30, rad * 30);
       if (isRock(px, py)) continue;                        // only on open floor
-      const roll = Math.random();
-      if (roll < 0.55) {                                   // GRASS = a patch of grassy floor
-        const gc = Math.floor(px / TILE), gr = Math.floor(py / TILE);
-        const grad = 1 + Math.floor(Math.random() * 2);    // small 1–2 tile blob
+      const type = Math.random() < 0.7 ? 'bush' : 'berry';
+      plants.push({ x: px, y: py, type, picked: false, seed: Math.random() });
+
+      if (type === 'bush') {                               // paint grass around the bush
+        const gc = Math.floor(px / TILE), gr = Math.floor(py / TILE), grad = 2;
         for (let c = gc - grad; c <= gc + grad; c++)
           for (let r = gr - grad; r <= gr + grad; r++) {
             if (c < 0 || r < 0 || c >= COLS || r >= ROWS) continue;
-            if (!grid[r * COLS + c] && Math.hypot(c - gc, r - gr) <= grad) grass[r * COLS + c] = 1;
+            if (!grid[r * COLS + c] && Math.hypot(c - gc, r - gr) <= grad + 0.4) grass[r * COLS + c] = 1;
           }
-      } else {                                             // a standing plant
-        const type = roll < 0.8 ? 'bush' : 'berry';
-        plants.push({ x: px, y: py, type, picked: false, seed: Math.random() });
       }
     }
   }
