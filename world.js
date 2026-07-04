@@ -5,15 +5,24 @@ function buildWorld() {
   grid = new Array(COLS * ROWS).fill(true);
   hard = new Uint8Array(COLS * ROWS);
   hits = new Uint8Array(COLS * ROWS);
+  bigId = new Int32Array(COLS * ROWS).fill(-1);
   explored = new Uint8Array(COLS * ROWS);
   visible  = new Uint8Array(COLS * ROWS);
   for (let i = 0; i < hard.length; i++) if (Math.random() < ROCK_CHANCE) hard[i] = 1;
-  // scatter tough 2×2 BIG ROCK blocks (10 hp) — rare, hard walls to dig around
+  // scatter tough 2×2 BIG ROCK blocks — one shared unit each (8 hp, break together).
+  // tag all four tiles with the same block id (the top-left index); skip spots that
+  // would overlap an existing big block so every block stays a clean 2×2.
   for (let n = 0; n < BIGROCK_COUNT; n++) {
     const c = 1 + Math.floor(Math.random() * (COLS - 3));
     const r = 1 + Math.floor(Math.random() * (ROWS - 3));
+    const id = r * COLS + c;
+    if (bigId[id] >= 0 || bigId[id + 1] >= 0 || bigId[id + COLS] >= 0 || bigId[id + COLS + 1] >= 0) continue;
     for (let dc = 0; dc < 2; dc++)
-      for (let dr = 0; dr < 2; dr++) hard[(r + dr) * COLS + (c + dc)] = 2;
+      for (let dr = 0; dr < 2; dr++) {
+        const j = (r + dr) * COLS + (c + dc);
+        hard[j] = 2;
+        bigId[j] = id;
+      }
   }
   mctx.clearRect(0, 0, COLS, ROWS);            // wipe the minimap cache for a fresh world
 

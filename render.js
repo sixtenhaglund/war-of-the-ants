@@ -51,8 +51,13 @@ function draw() {
           ctx.strokeStyle = col[2];
           ctx.strokeRect(x + 0.5, y + 0.5, TILE, TILE);
         }
-        if (hits[i] > 0) {                        // darker per break stage (saved damage)
-          ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * (hits[i] / maxHits(i))) + ')';
+        // damage darkening: big rock reads its whole block's shared health, so
+        // all four tiles darken together; other blocks use their own hits.
+        const dmg = hard[i] === 2 && bigId[i] >= 0
+          ? hits[bigId[i]] / BIGROCK_HP
+          : hits[i] / maxHits(i);
+        if (dmg > 0) {
+          ctx.fillStyle = 'rgba(0,0,0,' + (0.7 * dmg) + ')';
           ctx.fillRect(x, y, TILE, TILE);
         }
       } else {                                    // open floor

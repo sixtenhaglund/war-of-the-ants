@@ -67,6 +67,22 @@ function chompDamage() {
   if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) return;
   const i = r * COLS + c;
   if (grid[i] !== true) return;
+
+  if (hard[i] === 2 && bigId[i] >= 0) {         // BIG ROCK: one shared 2×2 unit
+    const o = bigId[i];
+    hits[o] += 1;                               // damage saved on the block's top-left
+    if (hits[o] >= BIGROCK_HP) {                // whole block breaks at once
+      const oc = o % COLS, or = (o - oc) / COLS;
+      for (let dc = 0; dc < 2; dc++)
+        for (let dr = 0; dr < 2; dr++) {
+          const j = (or + dr) * COLS + (oc + dc);
+          grid[j] = false; hits[j] = 0; bigId[j] = -1;
+          stampMini(oc + dc, or + dr);
+        }
+    }
+    return;
+  }
+
   hits[i] += 1;                               // damage is saved per block
   if (hits[i] >= maxHits(i)) { grid[i] = false; hits[i] = 0; stampMini(c, r); }  // breaks
 }
