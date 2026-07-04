@@ -95,8 +95,12 @@ function updateFog() {
         if ((x - queen.x) ** 2 + (y - queen.y) ** 2 > maxD2) continue;  // out of range
         if (grid[ni]) {
           reveal(ni, nc, nr);            // a rock wall we can see (don't dig through it here)
-        } else if (dc === 0 || dr === 0) {
-          reveal(ni, nc, nr);            // open tile, orthogonally connected → flood on
+        } else {
+          // an open tile → the flood spreads into it. For a DIAGONAL step, only
+          // pass if at least one side tile is also open — never squeeze through a
+          // corner between two solid rocks (that would peek through a wall).
+          if (dc !== 0 && dr !== 0 && grid[r * COLS + nc] && grid[nr * COLS + c]) continue;
+          reveal(ni, nc, nr);            // open tile, connected → flood on
           queue.push(ni);
         }
       }
