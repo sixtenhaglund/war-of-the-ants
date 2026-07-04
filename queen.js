@@ -104,6 +104,7 @@ function drawQueen() {
     ctx.save();
     ctx.translate(hx + 4, side * 2);            // hinge at the head's front corner
     ctx.rotate(side * jawAngle);
+    ctx.scale(0.65, 0.65);                       // shrink the whole jaw shape
     ctx.beginPath();
     ctx.moveTo(0, side * 1.5);
     ctx.quadraticCurveTo(5, side * 3, 8, side * 0.3);   // outer edge → sharp tip

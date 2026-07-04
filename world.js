@@ -29,7 +29,10 @@ function buildWorld() {
     const cc = 3 + Math.floor(Math.random() * (COLS - 6));
     const cr = 3 + Math.floor(Math.random() * (ROWS - 6));
     const ccx = cc * TILE + TILE / 2, ccy = cr * TILE + TILE / 2;
-    if (Math.hypot(ccx - cx, ccy - cy) < 340) continue;   // keep caves off the nest
+    // keep caves off the nest: nest radius (130) + a big cave's reach (~230) +
+    // one full tile of rock, so no cave can ever touch the nest and be revealed
+    // before you've dug a tunnel to it.
+    if (Math.hypot(ccx - cx, ccy - cy) < roomRadius + 290) continue;
     const rad = 1 + Math.floor(Math.random() * 4);         // 1 (small) … 4 (big) tiles
     for (let c = cc - rad; c <= cc + rad; c++)
       for (let r = cr - rad; r <= cr + rad; r++) {
