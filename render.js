@@ -127,27 +127,28 @@ function drawMinimap() {
   ctx.imageSmoothingEnabled = false;              // crisp pixels, not blurry
   ctx.drawImage(mini, ox, oy, dw, dh);            // the cached explored map, scaled up
 
-  // little square marker on the map at a world position
-  const mark = (wx, wy, colour, half) => {
+  // markers snap to the SAME grid as the map: each fills one whole tile cell,
+  // aligned to the tile the creature stands on (just like the 1px-per-tile map).
+  const cell = Math.ceil(sc);
+  const markTile = (tc, tr, colour) => {
     ctx.fillStyle = colour;
-    ctx.fillRect(ox + (wx / TILE) * sc - half, oy + (wy / TILE) * sc - half, half * 2, half * 2);
+    ctx.fillRect(Math.floor(ox + tc * sc), Math.floor(oy + tr * sc), cell, cell);
   };
 
   // creatures: enemies = red, passive beetles = blue — but only the ones you've
   // already discovered (their tile is explored), so the map respects the fog.
-  const cs = bigMap ? 4 : 2;
   for (const b of beetles) {
     if (b.dead || b.gone || b.carried) continue;
     const bc = Math.floor(b.x / TILE), br = Math.floor(b.y / TILE);
     if (bc < 0 || br < 0 || bc >= COLS || br >= ROWS || !explored[br * COLS + bc]) continue;
-    mark(b.x, b.y, b.hostile ? '#e0463c' : '#4aa3ff', cs);   // red if hostile, else blue
+    markTile(bc, br, b.hostile ? '#e0463c' : '#4aa3ff');   // red if hostile, else blue
   }
 
   // friends (green) — draw any you add to a `friends` array later
   if (typeof friends !== 'undefined')
-    for (const f of friends) mark(f.x, f.y, '#46d068', cs);
+    for (const f of friends) markTile(Math.floor(f.x / TILE), Math.floor(f.y / TILE), '#46d068');
 
-  mark(queen.x, queen.y, '#46d068', bigMap ? 5 : 3);   // you (the queen) — green
+  markTile(Math.floor(queen.x / TILE), Math.floor(queen.y / TILE), '#46d068');   // you (the queen) — green
 
   ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
   ctx.strokeRect(bx, by, MM, MM);
