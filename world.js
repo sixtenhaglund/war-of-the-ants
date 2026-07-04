@@ -67,13 +67,13 @@ function reveal(i, c, r) {
   if (!explored[i]) { explored[i] = 1; stampMini(c, r); }
 }
 
-// VISION RULE: you only see open space that is CONNECTED to the queen through
-// other open tiles (a flood fill), plus the rock walls touching it — all within
-// the REVEAL radius. So a cave sealed behind rock stays hidden until you dig a
-// tunnel that actually links it to where you are.
+// VISION RULE: you see your WHOLE connected tunnel network — every open tile
+// reachable from the queen through other open tiles (a flood fill), plus the
+// rock walls touching it. No distance limit: connected tunnels stay lit even
+// through walls, like an ant farm. A cave sealed behind rock stays hidden until
+// you dig a tunnel that actually links it into your network.
 function updateFog() {
   visible.fill(0);
-  const maxD2 = REVEAL * REVEAL;
   const qc = Math.floor(queen.x / TILE), qr = Math.floor(queen.y / TILE);
   if (qc < 0 || qr < 0 || qc >= COLS || qr >= ROWS) return;
 
@@ -91,8 +91,6 @@ function updateFog() {
         if (nc < 0 || nr < 0 || nc >= COLS || nr >= ROWS) continue;
         const ni = nr * COLS + nc;
         if (visible[ni]) continue;
-        const x = nc * TILE + TILE / 2, y = nr * TILE + TILE / 2;
-        if ((x - queen.x) ** 2 + (y - queen.y) ** 2 > maxD2) continue;  // out of range
         if (grid[ni]) {
           reveal(ni, nc, nr);            // a rock wall we can see (don't dig through it here)
         } else {
