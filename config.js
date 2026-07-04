@@ -48,7 +48,7 @@ const NOSE = 15;   // centre → just past the head tip (must reach past her bod
 
 // ---- camera & vision ----
 const cam = { x: 0, y: 0, zoom: 1.4 };
-const REVEAL = 220;                          // how far the queen sees (pixels)
+const REVEAL = 320;                          // how far the queen sees (pixels)
 
 // ---- tuning knobs ----
 const DIRT_HP = 3;                           // dirt breaks in 3 bites
