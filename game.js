@@ -39,7 +39,9 @@ function update(dt) {
   // pick up a dead beetle you walk over (if your jaws are empty)
   if (!carrying) {
     for (const b of beetles) {
-      if (b.dead && !b.carried && !b.gone && Math.hypot(b.x - queen.x, b.y - queen.y) < 20) {
+      if (!b.dead || b.carried || b.gone) continue;
+      if (b.noPickup > 0) { b.noPickup -= dt; continue; }    // just dropped → let it lie a moment
+      if (Math.hypot(b.x - queen.x, b.y - queen.y) < 20) {
         b.carried = true;
         carrying = { kind: 'beetle', food: 2, beetle: b };   // beetle = 2 food
         break;

@@ -16,8 +16,11 @@ canvas.addEventListener('wheel', e => {
 // track the mouse so the queen can steer toward it
 canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
-// hold the mouse button to mine / bite in front of the queen
-canvas.addEventListener('mousedown', () => { mouseHeld = true; });
+// click while carrying → drop the food on the ground; otherwise hold to mine / bite
+canvas.addEventListener('mousedown', () => {
+  if (carrying) { dropCarried(); return; }   // consume this click so she doesn't bite
+  mouseHeld = true;
+});
 addEventListener('mouseup', () => { mouseHeld = false; });
 
 function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }

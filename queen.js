@@ -46,6 +46,22 @@ function startBite() {
   bitePending = true;
 }
 
+// drop whatever the queen is carrying onto the ground in front of her, so she
+// can pick it up again later. A short grace stops her instantly re-grabbing it.
+function dropCarried() {
+  if (!carrying) return;
+  const b = carrying.beetle;
+  if (b) {
+    let dx = queen.x + Math.cos(queen.angle) * 20;   // just in front of her
+    let dy = queen.y + Math.sin(queen.angle) * 20;
+    if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
+    b.x = dx; b.y = dy;
+    b.carried = false;
+    b.noPickup = 0.8;                                 // seconds before it can be re-grabbed
+  }
+  carrying = null;
+}
+
 // The real chomp — runs at the snap. Hits a beetle if one's in front, else rock.
 function chompDamage() {
   const fx = queen.x + Math.cos(queen.angle) * NOSE;
