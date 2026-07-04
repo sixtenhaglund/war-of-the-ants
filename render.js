@@ -80,11 +80,18 @@ function draw() {
 // ---- minimap: blit the cached world image into a square box, bottom-left.
 //      No per-tile loop here anymore — we just scale up the pre-stamped image. ----
 function drawMinimap() {
-  const MM = 190;
-  const bx = 14, by = H - MM - 14;
+  // small in the corner normally; big and centred when the M-map is open
+  const MM = bigMap ? Math.min(W, H) * 0.9 : 190;
+  const bx = bigMap ? (W - MM) / 2 : 14;
+  const by = bigMap ? (H - MM) / 2 : H - MM - 14;
   const sc = Math.min(MM / COLS, MM / ROWS);      // fit COLS×ROWS pixels into the box
   const dw = COLS * sc, dh = ROWS * sc;
   const ox = bx + (MM - dw) / 2, oy = by + (MM - dh) / 2;
+
+  if (bigMap) {                                   // darken the game behind the big map
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, W, H);
+  }
 
   ctx.fillStyle = '#000';
   ctx.fillRect(bx, by, MM, MM);
@@ -94,9 +101,17 @@ function drawMinimap() {
 
   ctx.fillStyle = '#ffd479';                      // queen dot
   ctx.beginPath();
-  ctx.arc(ox + (queen.x / TILE) * sc, oy + (queen.y / TILE) * sc, 3, 0, 6.28);
+  ctx.arc(ox + (queen.x / TILE) * sc, oy + (queen.y / TILE) * sc, bigMap ? 5 : 3, 0, 6.28);
   ctx.fill();
 
   ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
   ctx.strokeRect(bx, by, MM, MM);
+
+  if (bigMap) {                                   // little hint under the big map
+    ctx.fillStyle = '#ffd479';
+    ctx.font = '16px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Press M to close', W / 2, oy + dh + 26);
+    ctx.textAlign = 'left';                        // reset so other text isn't centred
+  }
 }

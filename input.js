@@ -4,6 +4,7 @@ addEventListener('keydown', e => {
   keys[e.key] = true;
   if (e.key === '+' || e.key === '=') cam.zoom = clamp(cam.zoom * 1.15, 0.6, 3);
   if (e.key === '-' || e.key === '_') cam.zoom = clamp(cam.zoom / 1.15, 0.6, 3);
+  if (e.key === 'm' || e.key === 'M') bigMap = !bigMap;   // toggle the full-screen map
 });
 addEventListener('keyup', e => { keys[e.key] = false; });
 

@@ -24,6 +24,7 @@ let foodCount = 0;        // beetles delivered to the nest food pile
 let particles = [];       // blood droplets etc.
 let W, H;                 // screen size
 let running = false;
+let bigMap = false;       // is the full-screen map open? (toggled with M)
 
 // ---- the queen ----
 const queen = { x: WORLD_W / 2, y: WORLD_H / 2, speed: 100, angle: 0 };
