@@ -26,6 +26,10 @@ let W, H;                 // screen size
 let running = false;
 let bigMap = false;       // is the full-screen map open? (toggled with M)
 
+// ⚠ TEMPORARY DEBUG: reveal the whole map + infinite vision so you can see every
+//   cave. Set back to false to restore the normal fog of war.
+const DEBUG_SEE_ALL = true;
+
 // ---- the queen ----
 const queen = { x: WORLD_W / 2, y: WORLD_H / 2, speed: 100, angle: 0 };
 

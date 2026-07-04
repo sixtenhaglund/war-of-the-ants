@@ -59,6 +59,11 @@ function buildWorld() {
       });
     }
   }
+
+  // ⚠ debug: stamp the whole map onto the minimap so every cave shows from the start
+  if (DEBUG_SEE_ALL)
+    for (let c = 0; c < COLS; c++)
+      for (let r = 0; r < ROWS; r++) stampMini(c, r);
 }
 
 // is the world point (px,py) inside a solid block?
@@ -86,6 +91,7 @@ function reveal(i, c, r) {
 // A cave sealed behind rock is never reached by the flood, so it stays hidden
 // until you dig a tunnel that links it into your network.
 function updateFog() {
+  if (DEBUG_SEE_ALL) { visible.fill(1); explored.fill(1); return; }  // ⚠ debug: see everything
   visible.fill(0);
   const maxD2 = REVEAL * REVEAL;
   const qc = Math.floor(queen.x / TILE), qr = Math.floor(queen.y / TILE);
