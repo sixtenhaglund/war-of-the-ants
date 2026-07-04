@@ -49,7 +49,7 @@ function buildWorld() {
         if (c <= 0 || r <= 0 || c >= COLS - 1 || r >= ROWS - 1) continue;
         if (Math.hypot(c - cc, r - cr) <= rad + Math.random() * 0.7) grid[r * COLS + c] = false;
       }
-    const count = 2 + Math.floor(Math.random() * rad * 2); // bigger caves → more beetles
+    const count = 1 + Math.floor(Math.random() * 5);       // 1–5 beetles per cave
     for (let k = 0; k < count; k++) {
       beetles.push({
         x: ccx + rand(-rad * 22, rad * 22),

@@ -1,13 +1,28 @@
 /* Beetles: the bugs you hunt, and the nest food pile you feed. */
 
-// living beetles wander slowly around their cave, bouncing off rock
+// living beetles wander slowly around their cave — but PANIC and run away when
+// the queen gets close. They bounce off rock either way.
+const FLEE_RANGE = 140;   // how close the queen can get before a beetle bolts
 function updateBeetles(dt) {
   for (const b of beetles) {
     if (b.dead || b.gone || b.carried) continue;
-    b.wanderT -= dt;
-    if (b.wanderT <= 0) { b.angle = rand(0, 6.28); b.wanderT = rand(0.6, 2.2); }
-    const nx = b.x + Math.cos(b.angle) * 24 * dt;
-    const ny = b.y + Math.sin(b.angle) * 24 * dt;
+
+    const dx = b.x - queen.x, dy = b.y - queen.y;   // vector pointing AWAY from her
+    const dist = Math.hypot(dx, dy);
+
+    let speed;
+    if (dist < FLEE_RANGE) {
+      b.angle = Math.atan2(dy, dx);   // face straight away from the queen
+      b.wanderT = rand(0.2, 0.6);     // don't fall back into an old wander mid-panic
+      speed = 52;                     // scared beetles are quick (but slower than the queen)
+    } else {
+      b.wanderT -= dt;
+      if (b.wanderT <= 0) { b.angle = rand(0, 6.28); b.wanderT = rand(0.6, 2.2); }
+      speed = 24;
+    }
+
+    const nx = b.x + Math.cos(b.angle) * speed * dt;
+    const ny = b.y + Math.sin(b.angle) * speed * dt;
     if (!isRock(nx, b.y)) b.x = nx; else b.angle = rand(0, 6.28);
     if (!isRock(b.x, ny)) b.y = ny; else b.angle = rand(0, 6.28);
   }
