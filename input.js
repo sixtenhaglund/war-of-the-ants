@@ -2,6 +2,7 @@
 
 addEventListener('keydown', e => {
   keys[e.key] = true;
+  if (e.key === ' ') e.preventDefault();                  // Space spits — don't let the page scroll
   if (e.key === '+' || e.key === '=') cam.zoom = clamp(cam.zoom * 1.15, 0.6, 3);
   if (e.key === '-' || e.key === '_') cam.zoom = clamp(cam.zoom / 1.15, 0.6, 3);
   if (e.key === 'm' || e.key === 'M') bigMap = !bigMap;   // toggle the full-screen map
@@ -33,7 +34,8 @@ function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeig
 addEventListener('resize', () => { if (running) resize(); });
 
 // ---- PLAY button (called from index.html) ----
-function startGame() {
+function startGame(type) {
+  playerType = type || 'basic';                // which ant class the player chose
   document.getElementById('menu').style.display = 'none';
   document.getElementById('game').style.display = 'block';
   resize();

@@ -43,7 +43,6 @@ function buildWorld() {
   // scatter open CAVES through the rock — some small, some big — with beetles.
   beetles = [];
   centipedes = [];
-  spitters = [];
   acids = [];
   carried = [];
   dragging = null;
@@ -105,12 +104,6 @@ function buildWorld() {
     centipedes.push(makeCentipede(ccx + rand(-20, 20), ccy + rand(-20, 20), t));
   }
 
-  // scatter SPITTERS into yet more caves
-  for (let k = 0; k < SPITTER_LIMIT && placed.length > 0; k++) {
-    const cave = placed[(k * 5 + 1) % placed.length];
-    const ccx = cave.cc * TILE + TILE / 2, ccy = cave.cr * TILE + TILE / 2;
-    spitters.push(makeSpitter(ccx + rand(-20, 20), ccy + rand(-20, 20)));
-  }
 
   // dig thin TUNNELS linking nearby caves into networks: each cave connects to
   // its nearest neighbour most of the time, and a second one now and then — so

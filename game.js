@@ -46,9 +46,12 @@ function update(dt) {
 
   if (reviveFlash > 0) reviveFlash -= dt;       // fade out the "revived" banner
 
+  // the Spitter queen sprays acid while SPACE is held (on a short cooldown)
+  if (playerSpitCd > 0) playerSpitCd -= dt;
+  if (playerType === 'spitter' && keys[' '] && playerSpitCd <= 0) { playerSpit(); playerSpitCd = SPIT_CD; }
+
   updateBeetles(dt);
   updateCentipedes(dt);
-  updateSpitters(dt);
   updateAcids(dt);
   updateDrag();                                 // keep the dragged centipede pinned to her mouth
   updateParticles(dt);

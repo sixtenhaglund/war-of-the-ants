@@ -11,14 +11,16 @@
 <!-- ===== MENU ===== -->
 <div id="menu">
   <h1>WAR OF THE ANTS</h1>
-  <button onclick="startGame()">PLAY</button>
-  <button onclick="alert('Steer with the mouse, W/S to move. Hold left-click to mine walls and bite bugs.\n\nBeetles (2 bites) are harmless — left-click a dead one to carry it (2 on your back + 1 in your mouth).\n\nCentipedes (5 bites) HUNT you and bite — watch your health bar! A dead centipede is too heavy to carry: left-click it to DRAG it (you move at half speed), worth 5 food.\n\nSpitters (green ants, 3 bites) keep their distance and spit ACID at you — chase them down and bite them. A dead spitter carries like a beetle (4 food).\n\nCarry prey to the ring in your nest and right-click to drop it — the bodies pile up there and still count as food (you can pick them back up any time).\n\nHurt? Press E to EAT what is in your mouth: a beetle heals 3 HP, a centipede 8-12. With empty jaws, stand on the pile and press E to open the pile and CHOOSE what to eat. If a centipede slays you, the queen is revived at the nest — the world carries on. Scroll to zoom.')">HOW TO PLAY</button>
+  <p class="choose">Choose your queen</p>
+  <button onclick="startGame('basic')">🐜 BASIC &nbsp;— melee biter</button>
+  <button onclick="startGame('spitter')">💚 SPITTER &nbsp;— spits acid (hold Space)</button>
+  <button onclick="alert('Steer with the mouse, W/S to move. Hold left-click to mine walls and bite bugs.\n\nBASIC queen: fights up close by biting. SPITTER queen: hold SPACE to spray acid at enemies from a distance (she still mines and bites too).\n\nBeetles (2 bites) are harmless — left-click a dead one to carry it (2 on your back + 1 in your mouth).\n\nCentipedes HUNT you and bite — watch your health bar! A dead centipede is too heavy to carry: left-click it to DRAG it (half speed), worth more food.\n\nCarry prey to the ring in your nest and right-click to drop it — the bodies pile up as food and can be picked back up.\n\nHurt? Press E to EAT what is in your mouth. With empty jaws, stand on the pile and press E to CHOOSE what to eat. If you are slain, the queen is revived at the nest. Scroll to zoom.')">HOW TO PLAY</button>
 </div>
 
 <!-- ===== GAME ===== -->
 <div id="game">
   <canvas id="cv"></canvas>
-  <div id="hint">Mouse to steer &nbsp;·&nbsp; W / S move &nbsp;·&nbsp; Hold click to mine / bite &nbsp;·&nbsp; Left-click prey to carry / drag &nbsp;·&nbsp; Right-click to drop (drop in the ring to stock the pile) &nbsp;·&nbsp; E to eat</div>
+  <div id="hint">Mouse to steer &nbsp;·&nbsp; W / S move &nbsp;·&nbsp; Hold click to mine / bite &nbsp;·&nbsp; Space to spit acid (Spitter) &nbsp;·&nbsp; Left-click prey to carry / drag &nbsp;·&nbsp; Right-click to drop &nbsp;·&nbsp; E to eat</div>
   <div id="score">🍖 Food: 0</div>
 </div>
 

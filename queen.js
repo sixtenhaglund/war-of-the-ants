@@ -60,8 +60,7 @@ function tryGrab() {
     }
     if (best) { best.carried = true; dragging = best; return true; }
   }
-  // otherwise a small body (beetle OR spitter) onto her back/mouth
-  // (only BACK_CAP fit while a drag fills the mouth)
+  // otherwise a beetle onto her back/mouth (only BACK_CAP fit while a drag fills the mouth)
   const cap = dragging ? BACK_CAP : CARRY_CAP;
   if (carried.length < cap) {
     let best = null, bestD = 26;
@@ -69,11 +68,6 @@ function tryGrab() {
       if (!b.dead || b.carried || b.gone || b.noPickup > 0) continue;
       const d = Math.hypot(b.x - queen.x, b.y - queen.y);
       if (d < bestD) { bestD = d; best = b; }
-    }
-    for (const s of spitters) {
-      if (!s.dead || s.carried || s.gone || s.noPickup > 0) continue;
-      const d = Math.hypot(s.x - queen.x, s.y - queen.y);
-      if (d < bestD) { bestD = d; best = s; }
     }
     if (best) { best.carried = true; carried.push(best); return true; }
   }
@@ -108,11 +102,9 @@ function eatBody(entity, full) {
 function pileBodies() {
   const out = [];
   for (const b of beetles)    if (b.dead && !b.gone && !b.carried && inPile(b))
-    out.push({ e: b, type: 'beetle',    food: 2,             full: BEETLE_HEAL,  heal: chargeLeft(b, BEETLE_HEAL) });
-  for (const s of spitters)   if (s.dead && !s.gone && !s.carried && inPile(s))
-    out.push({ e: s, type: 'spitter',   food: SPITTER_FOOD,  full: SPITTER_HEAL, heal: chargeLeft(s, SPITTER_HEAL) });
+    out.push({ e: b, type: 'beetle',    food: 2,           full: BEETLE_HEAL, heal: chargeLeft(b, BEETLE_HEAL) });
   for (const c of centipedes) if (c.dead && !c.gone && !c.carried && inPile(c))
-    out.push({ e: c, type: 'centipede', food: c.type.food,   full: c.type.heal,  heal: chargeLeft(c, c.type.heal) });
+    out.push({ e: c, type: 'centipede', food: c.type.food, full: c.type.heal, heal: chargeLeft(c, c.type.heal) });
   return out;
 }
 
@@ -128,10 +120,9 @@ function eat() {
     if (eatBody(dragging, dragging.type.heal) && dragging.gone) dragging = null;  // release only if fully eaten
     return;
   }
-  if (carried.length) {                                   // nibble the body in her mouth
+  if (carried.length) {                                   // nibble the beetle in her mouth
     const b = carried[carried.length - 1];
-    const full = b.kind === 'spitter' ? SPITTER_HEAL : BEETLE_HEAL;
-    if (eatBody(b, full) && b.gone) carried.pop();         // drop it only once it's used up
+    if (eatBody(b, BEETLE_HEAL) && b.gone) carried.pop();  // drop it only once it's used up
     return;
   }
   togglePileMenu();                                       // hands empty → choose from the pile
@@ -164,8 +155,8 @@ function renderPileMenu() {
   for (const key of keys) {
     const g = groups[key];
     const btn = document.createElement('button');
-    const icon = g.type === 'centipede' ? '🐛' : g.type === 'spitter' ? '🐜' : '🪲';
-    const name = g.type === 'centipede' ? 'Centipede' : g.type === 'spitter' ? 'Spitter' : 'Beetle';
+    const icon = g.type === 'centipede' ? '🐛' : '🪲';
+    const name = g.type === 'centipede' ? 'Centipede' : 'Beetle';
     btn.textContent = icon + ' ' + name + ' — heals ' + g.heal + ' HP   ×' + g.n;
     btn.onclick = () => eatFromPile(g.type, g.heal);
     list.appendChild(btn);
@@ -217,9 +208,6 @@ function chompDamage() {
   for (const b of beetles)    { if (b.dead || b.gone || b.carried) continue;
     const d = Math.hypot(b.x - fx, b.y - fy);
     if (d < td && clearLine(queen.x, queen.y, b.x, b.y)) { td = d; target = b; } }
-  for (const s of spitters)   { if (s.dead || s.gone || s.carried) continue;
-    const d = Math.hypot(s.x - fx, s.y - fy);
-    if (d < td && clearLine(queen.x, queen.y, s.x, s.y)) { td = d; target = s; } }
   for (const c of centipedes) { if (c.dead || c.gone || c.carried) continue;
     for (const s of c.segs) {                   // whole body is a hitbox: bite ANY segment
       const d = Math.hypot(s.x - fx, s.y - fy);
@@ -309,7 +297,7 @@ function drawQueen() {
   const head = BODY_PARTS[2];
   const hx = head.x + keyed(e, [[0, 0], [0.45, -4], [0.75, 3], [1, 0]]);
 
-  ctx.fillStyle = '#e8c060';
+  ctx.fillStyle = playerType === 'spitter' ? '#a9c24e' : '#e8c060';   // Spitter queen is acid-green
   ctx.beginPath(); ctx.ellipse(BODY_PARTS[0].x, 0, BODY_PARTS[0].rx, BODY_PARTS[0].ry, 0, 0, 6.28); ctx.fill(); // abdomen
   ctx.beginPath(); ctx.ellipse(BODY_PARTS[1].x, 0, BODY_PARTS[1].rx, BODY_PARTS[1].ry, 0, 0, 6.28); ctx.fill(); // thorax
   ctx.beginPath(); ctx.ellipse(hx, 0, head.rx, head.ry, 0, 0, 6.28); ctx.fill();                                // head (lunges)
