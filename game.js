@@ -27,7 +27,7 @@ function update(dt) {
   // 3) biting: start on cooldown while held — but NOT while carrying something
   //    (her mouth is full). Damage lands when the jaws snap shut.
   if (biteCd > 0) biteCd -= dt;
-  if (mouseHeld && biteCd <= 0 && carried.length === 0) startBite();
+  if (mouseHeld && biteCd <= 0 && carried.length <= BACK_CAP) startBite();   // blocked only when a beetle's in her mouth
   if (bitePending && (BITE_COOLDOWN - biteCd) / BITE_ANIM >= BITE_IMPACT) {
     chompDamage();
     bitePending = false;

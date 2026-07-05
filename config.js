@@ -20,8 +20,9 @@ let hits;                 // how many bites this block has taken (saved!)
 let bigId;                // for a 2×2 big-rock tile: its block's top-left index (else -1)
 let explored, visible;    // fog: seen-before? / seen right now?
 let beetles = [];         // bugs living in the caves
-let carried = [];         // dead beetles she's hauling: [0] rides in her mouth, the rest on her back
-const CARRY_CAP = 3;      // she can hold 3 small beetles at once (1 in the mouth + 2 on the back)
+let carried = [];         // dead beetles she's hauling: the first BACK_CAP ride on her back, the next in her mouth
+const BACK_CAP = 2;       // beetles that fit on her back (mouth stays free, so she can still mine)
+const CARRY_CAP = 3;      // total she can hold = 2 on the back + 1 in the mouth
 let foodCount = 0;        // beetles delivered to the nest food pile
 let pileBeetles = [];     // one entry per beetle dropped on the pile, so the heap shows REAL beetles
 let particles = [];       // blood droplets etc.

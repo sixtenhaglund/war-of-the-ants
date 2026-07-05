@@ -113,14 +113,14 @@ function draw() {
 
   drawQueen();
 
-  // the beetles she's hauling: the LAST one picked rides in her mouth out front,
-  // the earlier ones ride on her back (newest back one nearest the thorax)
+  // the beetles she's hauling: the first BACK_CAP ride on her back; only once those
+  // are full does the next one (the 3rd) go in her mouth out front
   for (let k = 0; k < carried.length; k++) {
     ctx.save();
     ctx.translate(queen.x, queen.y);
     ctx.rotate(queen.angle);
-    const isMouth = k === carried.length - 1;
-    const bx = isMouth ? 16 : -6 - (carried.length - 1 - k) * 6;   // mouth = 16; back ones stack over her abdomen
+    const isMouth = k >= BACK_CAP;                       // slot 3 = the mouth
+    const bx = isMouth ? 16 : -8 - k * 7;                // mouth = 16; back ones stack over her abdomen
     drawBeetle(bx, 0, 0, true, true);
     ctx.restore();
   }
