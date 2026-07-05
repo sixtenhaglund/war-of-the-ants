@@ -2,28 +2,30 @@
    Kill one (5 bites) and it becomes a heavy corpse you DRAG by the mouth — you
    move at half speed, but it's worth 5 food at the pile. */
 
-// build one centipede at head position (x, y). Its body is a little "rope" of
-// points (segs) that trails the head — that's what makes it slither.
-function makeCentipede(x, y) {
+// build one centipede at head position (x, y), of size CENTI_TYPES[t]. Its body is
+// a little "rope" of points (segs) that trails the head — that's what makes it
+// slither. It keeps a reference to its `type` so all its stats come from one place.
+function makeCentipede(x, y, t) {
+  const type = CENTI_TYPES[t];
   const segs = [];
-  for (let i = 0; i < CENTI_SEGS; i++) segs.push({ x, y });   // all stacked on the head at first
+  for (let i = 0; i < type.segs; i++) segs.push({ x, y });    // all stacked on the head at first
   return {
-    x, y, angle: rand(0, 6.28), hp: CENTI_HP,
+    x, y, angle: rand(0, 6.28), hp: type.hp, maxHp: type.hp, type,
     dead: false, carried: false, gone: false, hostile: true,
     biteCd: 0, wanderT: 0, noPickup: 0, segs,
   };
 }
 
 // pull the body along: seg[0] snaps to the head, then each seg is kept exactly
-// CENTI_SEG_SPACING behind the one in front → a smooth trailing chain.
+// its type's spacing behind the one in front → a smooth trailing chain.
 function followSegs(c) {
-  const s = c.segs;
+  const s = c.segs, gap = c.type.spacing;
   s[0].x = c.x; s[0].y = c.y;
   for (let i = 1; i < s.length; i++) {
     const dx = s[i].x - s[i - 1].x, dy = s[i].y - s[i - 1].y;
     const d = Math.hypot(dx, dy) || 1;
-    s[i].x = s[i - 1].x + (dx / d) * CENTI_SEG_SPACING;
-    s[i].y = s[i - 1].y + (dy / d) * CENTI_SEG_SPACING;
+    s[i].x = s[i - 1].x + (dx / d) * gap;
+    s[i].y = s[i - 1].y + (dy / d) * gap;
   }
 }
 
@@ -39,8 +41,8 @@ function updateCentipedes(dt) {
     if (dist < CENTI_CHASE) {
       // HUNT: crawl straight at the queen, sliding along any wall it meets
       c.angle = Math.atan2(dy, dx);
-      const mvx = Math.cos(c.angle) * CENTI_SPEED * dt;
-      const mvy = Math.sin(c.angle) * CENTI_SPEED * dt;
+      const mvx = Math.cos(c.angle) * c.type.speed * dt;
+      const mvy = Math.sin(c.angle) * c.type.speed * dt;
       if (!isRock(c.x + mvx, c.y)) c.x += mvx;
       if (!isRock(c.x, c.y + mvy)) c.y += mvy;
     } else {
@@ -58,7 +60,7 @@ function updateCentipedes(dt) {
     if (c.biteCd <= 0) {
       const hd = Math.hypot(c.x - queen.x, c.y - queen.y);   // c.x/c.y is the head
       if (hd < CENTI_ATTACK) {
-        queen.hp -= CENTI_DMG;
+        queen.hp -= c.type.dmg;
         c.biteCd = CENTI_BITE_CD;
         spawnBlood(queen.x, queen.y, 6);
         // knock her AWAY from the head
@@ -84,9 +86,9 @@ function updateDrag() {
 // draw a centipede from its segs: overlapping circles, thick at the head, with
 // little legs and a fanged head. Grey when dead.
 function drawCentipede(c) {
-  const s = c.segs, n = s.length, dead = c.dead;
-  const bodyA = dead ? '#5a5a5a' : '#8a3320';
-  const bodyB = dead ? '#6c6c6c' : '#a34328';
+  const s = c.segs, n = s.length, dead = c.dead, m = c.type.rMul;   // m = size multiplier
+  const bodyA = dead ? '#5a5a5a' : c.type.dark;
+  const bodyB = dead ? '#6c6c6c' : c.type.col;
 
   // legs first (under the body): two per segment, poking out sideways
   ctx.strokeStyle = dead ? '#4a4a4a' : '#3a140a'; ctx.lineWidth = 1.4;
@@ -98,7 +100,7 @@ function drawCentipede(c) {
     for (const side of [-1, 1]) {
       ctx.beginPath();
       ctx.moveTo(s[i].x, s[i].y);
-      ctx.lineTo(s[i].x + px * side * 7 + (dx / d) * wig, s[i].y + py * side * 7 + (dy / d) * wig);
+      ctx.lineTo(s[i].x + px * side * 7 * m + (dx / d) * wig, s[i].y + py * side * 7 * m + (dy / d) * wig);
       ctx.stroke();
     }
   }
@@ -106,7 +108,7 @@ function drawCentipede(c) {
   // body segments, tail → head so the head sits on top
   for (let i = n - 1; i >= 0; i--) {
     const t = i / (n - 1);                         // 0 at head, 1 at tail
-    const r = 3 + (1 - t) * 3.5;                   // fatter toward the head
+    const r = (3 + (1 - t) * 3.5) * m;             // fatter toward the head, scaled by size
     ctx.fillStyle = i % 2 ? bodyA : bodyB;
     ctx.beginPath(); ctx.arc(s[i].x, s[i].y, r, 0, 6.28); ctx.fill();
   }
@@ -117,7 +119,8 @@ function drawCentipede(c) {
   ctx.save();
   ctx.translate(hx, hy);
   ctx.rotate(ang);
-  ctx.fillStyle = dead ? '#7a7a7a' : '#b5502f';
+  ctx.scale(m, m);                                                  // whole head scales with size
+  ctx.fillStyle = dead ? '#7a7a7a' : c.type.col;
   ctx.beginPath(); ctx.arc(1, 0, 6, 0, 6.28); ctx.fill();          // head
   if (!dead) {                                                      // glowing eyes only when alive
     ctx.fillStyle = '#ffdb4d';
@@ -134,11 +137,11 @@ function drawCentipede(c) {
   ctx.restore();
 }
 
-// red health bar over a living centipede's head
+// red health bar over a living centipede's head (wider for bigger ones)
 function drawCentipedeHp(c) {
-  const w = 22, x = c.x - w / 2, y = c.y - 16;
+  const w = 20 * c.type.rMul, x = c.x - w / 2, y = c.y - 14 * c.type.rMul;
   ctx.fillStyle = '#000'; ctx.fillRect(x - 1, y - 1, w + 2, 5);
-  ctx.fillStyle = '#e04030'; ctx.fillRect(x, y, w * (c.hp / CENTI_HP), 3);
+  ctx.fillStyle = '#e04030'; ctx.fillRect(x, y, w * (c.hp / c.maxHp), 3);
 }
 
 // ---- the queen has died ----

@@ -84,12 +84,13 @@ function tryDeposit() {
   while (carried.length && foodCount < FOOD_LIMIT) {                // dump the beetles
     const b = carried.shift(); b.gone = true;
     foodCount = Math.min(FOOD_LIMIT, foodCount + 2);
-    pileItems.push({ type: 'beetle' });
+    pileItems.push({ type: 'beetle', food: 2, heal: BEETLE_HEAL });
   }
-  if (dragging && foodCount < FOOD_LIMIT) {                         // then the centipede
-    dragging.gone = true; dragging = null;
-    foodCount = Math.min(FOOD_LIMIT, foodCount + CENTI_FOOD);
-    pileItems.push({ type: 'centipede' });
+  if (dragging && foodCount < FOOD_LIMIT) {                         // then the centipede (its size sets the value)
+    dragging.gone = true;
+    foodCount = Math.min(FOOD_LIMIT, foodCount + dragging.type.food);
+    pileItems.push({ type: 'centipede', food: dragging.type.food, heal: dragging.type.heal });
+    dragging = null;
   }
   return true;                                                      // consume the click either way
 }
@@ -100,9 +101,10 @@ function tryDeposit() {
 function eat() {
   if (queen.hp >= QUEEN_HP) return;                        // already full — don't waste food
 
-  if (dragging) {                                          // eat the dragged centipede
-    dragging.gone = true; dragging = null;
-    queen.hp = Math.min(QUEEN_HP, queen.hp + CENTI_HEAL);
+  if (dragging) {                                          // eat the dragged centipede (bigger = more HP)
+    dragging.gone = true;
+    queen.hp = Math.min(QUEEN_HP, queen.hp + dragging.type.heal);
+    dragging = null;
     return;
   }
   if (carried.length) {                                    // eat the beetle in her mouth
@@ -110,12 +112,11 @@ function eat() {
     queen.hp = Math.min(QUEEN_HP, queen.hp + BEETLE_HEAL);
     return;
   }
-  // hands empty → eat from the pile if she's standing on it
+  // hands empty → eat from the pile if she's standing on it (each item remembers its heal)
   if (pileItems.length && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
     const item = pileItems.pop();                          // take one off the heap
-    const centi = item.type === 'centipede';
-    foodCount = Math.max(0, foodCount - (centi ? CENTI_FOOD : 2));
-    queen.hp = Math.min(QUEEN_HP, queen.hp + (centi ? CENTI_HEAL : BEETLE_HEAL));
+    foodCount = Math.max(0, foodCount - item.food);
+    queen.hp = Math.min(QUEEN_HP, queen.hp + item.heal);
   }
 }
 

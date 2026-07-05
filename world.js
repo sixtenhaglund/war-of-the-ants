@@ -99,7 +99,9 @@ function buildWorld() {
   for (let k = 0; k < CENTI_LIMIT && placed.length > 0; k++) {
     const cave = placed[(k * 7 + 3) % placed.length];
     const ccx = cave.cc * TILE + TILE / 2, ccy = cave.cr * TILE + TILE / 2;
-    centipedes.push(makeCentipede(ccx + rand(-20, 20), ccy + rand(-20, 20)));
+    const roll = Math.random();
+    const t = roll < 0.5 ? 0 : roll < 0.83 ? 1 : 2;   // mostly small, some medium, a few giants
+    centipedes.push(makeCentipede(ccx + rand(-20, 20), ccy + rand(-20, 20), t));
   }
 
   // dig thin TUNNELS linking nearby caves into networks: each cave connects to

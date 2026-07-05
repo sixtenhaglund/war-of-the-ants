@@ -74,19 +74,20 @@ const BIGROCK_COUNT = 45;                     // how many tough 2×2 rock blocks
 const BEETLE_HP = 2;                         // beetles die in 2 bites
 const BUG_LIMIT = 50;                         // total bugs on the map, spread evenly over caves
 const BEETLE_HEAL = 4;                        // eating a beetle (press E) restores 4 HP
-const CENTI_HEAL = 8;                         // eating a centipede restores 8 HP
 
-// ---- centipedes: long, hostile prey ----
-const CENTI_HP = 5;                           // tough: 5 bites to kill
-const CENTI_FOOD = 5;                         // worth 5 food when dragged to the pile
+// ---- centipedes: long, hostile prey. THREE sizes, each with its own stats.
+//      Bigger ones are longer, tougher, hit harder, and give more food — but they
+//      crawl slower. Each spawned centipede picks a type and copies these numbers. ----
+const CENTI_TYPES = [
+  // name        segs spacing  hp  dmg food heal  rMul  speed  colour     shade
+  { name: 'small',  segs: 8,  spacing: 6, hp: 3, dmg: 1, food: 3, heal: 5,  rMul: 0.8, speed: 84, col: '#c46a2a', dark: '#9c4d1a' },
+  { name: 'medium', segs: 12, spacing: 7, hp: 5, dmg: 1, food: 5, heal: 8,  rMul: 1.0, speed: 70, col: '#8a3320', dark: '#642415' },
+  { name: 'giant',  segs: 16, spacing: 8, hp: 9, dmg: 2, food: 9, heal: 12, rMul: 1.3, speed: 54, col: '#701818', dark: '#460d0d' },
+];
 const CENTI_LIMIT = 12;                       // how many roam the caves
-const CENTI_SEGS = 11;                        // body segments (drives its length)
-const CENTI_SEG_SPACING = 7;                  // pixels between segments
 const CENTI_CHASE = 210;                      // it starts hunting the queen within this range
-const CENTI_ATTACK = 26;                      // and bites her once this close
-const CENTI_DMG = 1;                          // damage per bite
+const CENTI_ATTACK = 26;                      // and bites her once this close (its HEAD, not tail)
 const CENTI_BITE_CD = 1.1;                    // seconds between its bites
-const CENTI_SPEED = 70;                       // hunting speed (a touch slower than the queen)
 const CENTI_WANDER = 26;                      // idle wander speed
 const BITE_COOLDOWN = 1.0;                   // seconds between bites (the wait)
 const BITE_ANIM = 0.45;                      // how long the bite ANIMATION takes
