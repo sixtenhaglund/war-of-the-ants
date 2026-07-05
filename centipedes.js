@@ -43,18 +43,6 @@ function updateCentipedes(dt) {
       const mvy = Math.sin(c.angle) * CENTI_SPEED * dt;
       if (!isRock(c.x + mvx, c.y)) c.x += mvx;
       if (!isRock(c.x, c.y + mvy)) c.y += mvy;
-
-      // close enough to bite? chomp the queen (on its own cooldown)
-      if (dist < CENTI_ATTACK && c.biteCd <= 0) {
-        queen.hp -= CENTI_DMG;
-        c.biteCd = CENTI_BITE_CD;
-        spawnBlood(queen.x, queen.y, 6);
-        // small knockback AWAY from the centipede so a hit FEELS like a hit
-        // (dx,dy points from the centipede toward the queen, so we add it)
-        const kx = (dx / (dist || 1)) * 6, ky = (dy / (dist || 1)) * 6;
-        if (!isRock(queen.x + kx, queen.y + ky)) { queen.x += kx; queen.y += ky; }
-        if (queen.hp <= 0) gameOver();
-      }
     } else {
       // WANDER slowly when the queen is far away
       c.wanderT -= dt;
@@ -65,6 +53,26 @@ function updateCentipedes(dt) {
       if (!isRock(c.x, c.y + mvy)) c.y += mvy; else c.angle = rand(0, 6.28);
     }
     followSegs(c);                                // body trails the head
+
+    // WHOLE-BODY hitbox: if ANY segment is touching the queen, it bites her (on
+    // cooldown) — so brushing the tail hurts just as much as the head.
+    if (c.biteCd <= 0) {
+      let hit = null, hd = CENTI_ATTACK;
+      for (const s of c.segs) {
+        const d = Math.hypot(s.x - queen.x, s.y - queen.y);
+        if (d < hd) { hd = d; hit = s; }         // nearest touching segment
+      }
+      if (hit) {
+        queen.hp -= CENTI_DMG;
+        c.biteCd = CENTI_BITE_CD;
+        spawnBlood(queen.x, queen.y, 6);
+        // knock her AWAY from the segment that hit her
+        const ax = queen.x - hit.x, ay = queen.y - hit.y, ad = Math.hypot(ax, ay) || 1;
+        const kx = (ax / ad) * 6, ky = (ay / ad) * 6;
+        if (!isRock(queen.x + kx, queen.y + ky)) { queen.x += kx; queen.y += ky; }
+        if (queen.hp <= 0) gameOver();
+      }
+    }
   }
 }
 
@@ -72,8 +80,9 @@ function updateCentipedes(dt) {
 // of its body drags along the ground behind her.
 function updateDrag() {
   if (!dragging) return;
-  dragging.x = queen.x + Math.cos(queen.angle) * 18;
-  dragging.y = queen.y + Math.sin(queen.angle) * 18;
+  const a = queenFacing();                         // her mouth now points backward (she hauls it behind her)
+  dragging.x = queen.x + Math.cos(a) * 18;
+  dragging.y = queen.y + Math.sin(a) * 18;
   followSegs(dragging);
 }
 

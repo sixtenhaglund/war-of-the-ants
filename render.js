@@ -129,7 +129,7 @@ function draw() {
   for (let k = 0; k < carried.length; k++) {
     ctx.save();
     ctx.translate(queen.x, queen.y);
-    ctx.rotate(queen.angle);
+    ctx.rotate(queenFacing());                          // flips with her when she's dragging
     const isMouth = k >= BACK_CAP;                       // slot 3 = the mouth
     if (isMouth) {
       drawBeetle(17, 0, Math.PI / 2, true, false);       // clamped crosswise in her jaws, like a real ant

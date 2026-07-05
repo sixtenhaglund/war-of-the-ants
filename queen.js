@@ -119,7 +119,8 @@ function chompDamage() {
   for (const b of beetles)    { if (b.dead || b.gone || b.carried) continue;
     const d = Math.hypot(b.x - fx, b.y - fy); if (d < td) { td = d; target = b; } }
   for (const c of centipedes) { if (c.dead || c.gone || c.carried) continue;
-    const d = Math.hypot(c.x - fx, c.y - fy); if (d < td) { td = d; target = c; } }
+    for (const s of c.segs) {                   // whole body is a hitbox: bite ANY segment
+      const d = Math.hypot(s.x - fx, s.y - fy); if (d < td) { td = d; target = c; } } }
   if (target) {
     target.hp -= 1;
     spawnBlood(target.x, target.y, 8);          // splatter on the hit
@@ -178,10 +179,17 @@ function drawMandible(side, hx, jawAngle) {
   ctx.restore();
 }
 
+// which way the queen's BODY points when drawn. Normally she faces her heading,
+// but while DRAGGING a centipede she turns around — she grips it and hauls it
+// backward, like a real ant, so her head points at the corpse trailing behind.
+function queenFacing() {
+  return dragging ? queen.angle + Math.PI : queen.angle;
+}
+
 function drawQueen() {
   ctx.save();
   ctx.translate(queen.x, queen.y);
-  ctx.rotate(queen.angle);
+  ctx.rotate(queenFacing());
 
   // legs: swing while walking forward/back, still otherwise
   ctx.strokeStyle = '#3a2b16'; ctx.lineWidth = 2;
