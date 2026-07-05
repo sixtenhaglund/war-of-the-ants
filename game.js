@@ -48,6 +48,8 @@ function update(dt) {
 
   updateBeetles(dt);
   updateCentipedes(dt);
+  updateSpitters(dt);
+  updateAcids(dt);
   updateDrag();                                 // keep the dragged centipede pinned to her mouth
   updateParticles(dt);
 

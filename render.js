@@ -119,23 +119,37 @@ function draw() {
     if (!c.dead) drawCentipedeHp(c);              // health bar over living centipedes
   }
 
-  drawParticles();                                // blood splatter
+  // spitters you can currently SEE
+  for (const s of spitters) {
+    if (s.gone || s.carried) continue;
+    const sc = Math.floor(s.x / TILE), sr = Math.floor(s.y / TILE);
+    if (sc < 0 || sr < 0 || sc >= COLS || sr >= ROWS) continue;
+    if (!visible[sr * COLS + sc]) continue;
+    drawSpitter(s);
+    if (!s.dead) drawSpitterHp(s);                // health bar over living spitters
+  }
+
+  drawParticles();                                // blood & acid splatter
+  drawAcids();                                    // acid globs in flight
 
   if (dragging) drawCentipede(dragging);          // the corpse she's hauling, under her body
   drawQueen();
 
-  // the beetles she's hauling: the first BACK_CAP ride on her back; only once those
+  // the prey she's hauling: the first BACK_CAP ride on her back; only once those
   // are full does the next one (the 3rd) go in her mouth out front
   for (let k = 0; k < carried.length; k++) {
+    const spit = carried[k].kind === 'spitter';         // beetle or spitter?
     ctx.save();
     ctx.translate(queen.x, queen.y);
     ctx.rotate(queenFacing());                          // flips with her when she's dragging
     const isMouth = k >= BACK_CAP;                       // slot 3 = the mouth
     if (isMouth) {
-      drawBeetle(17, 0, Math.PI / 2, true, false);       // clamped crosswise in her jaws, like a real ant
-      drawMandible(1, BODY_PARTS[2].x, 0);               // one jaw laid OVER the beetle → looks gripped
+      if (spit) drawSpitterAt(17, 0, Math.PI / 2, true, false);
+      else      drawBeetle(17, 0, Math.PI / 2, true, false);   // clamped crosswise in her jaws
+      drawMandible(1, BODY_PARTS[2].x, 0);               // one jaw laid OVER it → looks gripped
     } else {
-      drawBeetle(-8 - k * 7, 0, 0, true, true);          // back ones lie flat over her abdomen
+      if (spit) drawSpitterAt(-8 - k * 7, 0, 0, true, true);
+      else      drawBeetle(-8 - k * 7, 0, 0, true, true);      // back ones lie flat over her abdomen
     }
     ctx.restore();
   }
@@ -217,6 +231,12 @@ function drawMinimap() {
     const cc = Math.floor(c.x / TILE), cr = Math.floor(c.y / TILE);
     if (cc < 0 || cr < 0 || cc >= COLS || cr >= ROWS || !explored[cr * COLS + cc]) continue;
     markTile(cc, cr, '#e0463c');
+  }
+  for (const s of spitters) {                              // hostile spitters = acid green
+    if (s.dead || s.gone || s.carried) continue;
+    const sc = Math.floor(s.x / TILE), sr = Math.floor(s.y / TILE);
+    if (sc < 0 || sr < 0 || sc >= COLS || sr >= ROWS || !explored[sr * COLS + sc]) continue;
+    markTile(sc, sr, '#9fe02a');
   }
 
   // friends (green) — draw any you add to a `friends` array later

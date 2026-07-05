@@ -21,6 +21,8 @@ let bigId;                // for a 2×2 big-rock tile: its block's top-left inde
 let explored, visible;    // fog: seen-before? / seen right now?
 let beetles = [];         // bugs living in the caves
 let centipedes = [];      // long, hostile prey that hunts and bites the queen
+let spitters = [];        // hostile ant that keeps its distance and spits acid at you
+let acids = [];           // acid globs in flight
 let carried = [];         // dead beetles she's hauling: the first BACK_CAP ride on her back, the next in her mouth
 let dragging = null;      // a dead centipede being DRAGGED by the mouth (too big to carry) — or null
 let dragFlip = 0;         // 0..1 eased turn-around: 1 = fully spun around to haul, 0 = facing normally
@@ -89,6 +91,19 @@ const CENTI_FLEE = 175;                       // and bolts from a bigger threat 
 const CENTI_ATTACK = 26;                      // it catches / bites once this close (its HEAD, not tail)
 const CENTI_BITE_CD = 1.1;                    // seconds between its bites
 const CENTI_WANDER = 26;                      // idle wander speed
+
+// ---- spitters: a hostile ant that keeps its distance and spits ACID ----
+const SPITTER_HP = 3;                         // 3 bites to kill
+const SPITTER_LIMIT = 8;                      // how many roam the caves
+const SPITTER_FOOD = 4;                       // worth 4 food when carried to the pile
+const SPITTER_HEAL = 4;                       // eating one restores 4 HP
+const SPITTER_SIGHT = 270;                    // sees (and starts spitting at) the queen within this range
+const SPITTER_KITE = 150;                     // preferred distance — it backs away if you get closer
+const SPITTER_SPEED = 48;                     // slow crawl
+const SPIT_CD = 1.8;                          // seconds between acid spits
+const SPIT_SPEED = 210;                       // how fast an acid glob flies
+const SPIT_DMG = 2;                           // damage an acid hit deals
+const SPIT_LIFE = 2.2;                        // seconds an acid glob lasts before fizzling
 const BITE_COOLDOWN = 1.0;                   // seconds between bites (the wait)
 const BITE_ANIM = 0.45;                      // how long the bite ANIMATION takes
 const BITE_IMPACT = 0.75;                    // point in the animation (0..1) where jaws snap → damage

@@ -24,11 +24,12 @@ function updateParticles(dt) {
   }
 }
 
-// draw them (inside the world transform) — fading out as they die
+// draw them (inside the world transform) — fading out as they die. Blood is red;
+// acid splashes (tagged acid:true) are green.
 function drawParticles() {
-  ctx.fillStyle = '#b41414';
   for (const p of particles) {
     ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+    ctx.fillStyle = p.acid ? '#9fe02a' : '#b41414';
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, 6.28);
     ctx.fill();

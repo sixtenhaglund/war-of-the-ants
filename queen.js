@@ -60,7 +60,8 @@ function tryGrab() {
     }
     if (best) { best.carried = true; dragging = best; return true; }
   }
-  // otherwise a beetle onto her back/mouth (only BACK_CAP fit while a drag fills the mouth)
+  // otherwise a small body (beetle OR spitter) onto her back/mouth
+  // (only BACK_CAP fit while a drag fills the mouth)
   const cap = dragging ? BACK_CAP : CARRY_CAP;
   if (carried.length < cap) {
     let best = null, bestD = 26;
@@ -68,6 +69,11 @@ function tryGrab() {
       if (!b.dead || b.carried || b.gone || b.noPickup > 0) continue;
       const d = Math.hypot(b.x - queen.x, b.y - queen.y);
       if (d < bestD) { bestD = d; best = b; }
+    }
+    for (const s of spitters) {
+      if (!s.dead || s.carried || s.gone || s.noPickup > 0) continue;
+      const d = Math.hypot(s.x - queen.x, s.y - queen.y);
+      if (d < bestD) { bestD = d; best = s; }
     }
     if (best) { best.carried = true; carried.push(best); return true; }
   }
@@ -102,9 +108,11 @@ function eatBody(entity, full) {
 function pileBodies() {
   const out = [];
   for (const b of beetles)    if (b.dead && !b.gone && !b.carried && inPile(b))
-    out.push({ e: b, type: 'beetle',    food: 2,           full: BEETLE_HEAL, heal: chargeLeft(b, BEETLE_HEAL) });
+    out.push({ e: b, type: 'beetle',    food: 2,             full: BEETLE_HEAL,  heal: chargeLeft(b, BEETLE_HEAL) });
+  for (const s of spitters)   if (s.dead && !s.gone && !s.carried && inPile(s))
+    out.push({ e: s, type: 'spitter',   food: SPITTER_FOOD,  full: SPITTER_HEAL, heal: chargeLeft(s, SPITTER_HEAL) });
   for (const c of centipedes) if (c.dead && !c.gone && !c.carried && inPile(c))
-    out.push({ e: c, type: 'centipede', food: c.type.food, full: c.type.heal,  heal: chargeLeft(c, c.type.heal) });
+    out.push({ e: c, type: 'centipede', food: c.type.food,   full: c.type.heal,  heal: chargeLeft(c, c.type.heal) });
   return out;
 }
 
@@ -120,9 +128,10 @@ function eat() {
     if (eatBody(dragging, dragging.type.heal) && dragging.gone) dragging = null;  // release only if fully eaten
     return;
   }
-  if (carried.length) {                                   // nibble the beetle in her mouth
+  if (carried.length) {                                   // nibble the body in her mouth
     const b = carried[carried.length - 1];
-    if (eatBody(b, BEETLE_HEAL) && b.gone) carried.pop();  // drop it only once it's used up
+    const full = b.kind === 'spitter' ? SPITTER_HEAL : BEETLE_HEAL;
+    if (eatBody(b, full) && b.gone) carried.pop();         // drop it only once it's used up
     return;
   }
   togglePileMenu();                                       // hands empty → choose from the pile
@@ -155,8 +164,8 @@ function renderPileMenu() {
   for (const key of keys) {
     const g = groups[key];
     const btn = document.createElement('button');
-    const icon = g.type === 'centipede' ? '🐛' : '🪲';
-    const name = g.type === 'centipede' ? 'Centipede' : 'Beetle';
+    const icon = g.type === 'centipede' ? '🐛' : g.type === 'spitter' ? '🐜' : '🪲';
+    const name = g.type === 'centipede' ? 'Centipede' : g.type === 'spitter' ? 'Spitter' : 'Beetle';
     btn.textContent = icon + ' ' + name + ' — heals ' + g.heal + ' HP   ×' + g.n;
     btn.onclick = () => eatFromPile(g.type, g.heal);
     list.appendChild(btn);
@@ -175,32 +184,23 @@ function eatFromPile(type, heal) {
   renderPileMenu();
 }
 
-// Right-click drops ONE thing she's holding — the dragged centipede first, else the
-// top beetle — one per press. Standing on the pile, it's set down ON the pile (so it
-// counts as food and stacks up one by one). Elsewhere a beetle is set in front of
-// her, and a centipede is released EXACTLY where it lies (moving it would teleport it).
+// Right-click sets down ONE thing she's holding, one per press, right where she is —
+// nothing teleports to the pile. A dragged centipede is released EXACTLY where its
+// body lies; a held beetle is set just in front of her. Do this while standing on
+// the pile and it lands inside the ring, so it counts as food and stacks up.
 function dropHeld() {
-  const onPile = Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < PILE_RADIUS;
-
-  if (dragging) {
+  if (dragging) {                                       // let the centipede lie right where it is
     dragging.carried = false;
-    if (onPile) { dragging.x = foodPile.x + rand(-24, 24); dragging.y = foodPile.y + rand(-24, 24); }
     dragging.noPickup = 0.4;
     dragging = null;
     return;
   }
-
   const b = carried.pop();
   if (!b) return;
-  if (onPile) {                                         // one beetle onto the pile
-    b.x = foodPile.x + rand(-34, 34);
-    b.y = foodPile.y + rand(-34, 34);
-  } else {                                              // set it just in front of her
-    let dx = queen.x + Math.cos(queen.angle) * 20;
-    let dy = queen.y + Math.sin(queen.angle) * 20;
-    if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }
-    b.x = dx; b.y = dy;
-  }
+  let dx = queen.x + Math.cos(queen.angle) * 20;        // set it just in front of her
+  let dy = queen.y + Math.sin(queen.angle) * 20;
+  if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
+  b.x = dx; b.y = dy;
   b.carried = false;
   b.noPickup = 0.4;
 }
@@ -217,6 +217,9 @@ function chompDamage() {
   for (const b of beetles)    { if (b.dead || b.gone || b.carried) continue;
     const d = Math.hypot(b.x - fx, b.y - fy);
     if (d < td && clearLine(queen.x, queen.y, b.x, b.y)) { td = d; target = b; } }
+  for (const s of spitters)   { if (s.dead || s.gone || s.carried) continue;
+    const d = Math.hypot(s.x - fx, s.y - fy);
+    if (d < td && clearLine(queen.x, queen.y, s.x, s.y)) { td = d; target = s; } }
   for (const c of centipedes) { if (c.dead || c.gone || c.carried) continue;
     for (const s of c.segs) {                   // whole body is a hitbox: bite ANY segment
       const d = Math.hypot(s.x - fx, s.y - fy);
