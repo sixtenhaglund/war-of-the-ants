@@ -94,6 +94,31 @@ function tryDeposit() {
   return true;                                                      // consume the click either way
 }
 
+// Press E to EAT prey and restore health: the centipede in her mouth heals 8, a
+// beetle heals 4. If her mouth is empty but she's standing on the food pile, she
+// eats from the stockpile instead. Skipped at full health so nothing's wasted.
+function eat() {
+  if (queen.hp >= QUEEN_HP) return;                        // already full — don't waste food
+
+  if (dragging) {                                          // eat the dragged centipede
+    dragging.gone = true; dragging = null;
+    queen.hp = Math.min(QUEEN_HP, queen.hp + CENTI_HEAL);
+    return;
+  }
+  if (carried.length) {                                    // eat the beetle in her mouth
+    carried.pop().gone = true;
+    queen.hp = Math.min(QUEEN_HP, queen.hp + BEETLE_HEAL);
+    return;
+  }
+  // hands empty → eat from the pile if she's standing on it
+  if (pileItems.length && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
+    const item = pileItems.pop();                          // take one off the heap
+    const centi = item.type === 'centipede';
+    foodCount = Math.max(0, foodCount - (centi ? CENTI_FOOD : 2));
+    queen.hp = Math.min(QUEEN_HP, queen.hp + (centi ? CENTI_HEAL : BEETLE_HEAL));
+  }
+}
+
 // Right-click drops what's in her mouth in front of her: the dragged centipede
 // first (it fills the mouth), else the top beetle. A grace stops instant re-grab.
 function dropHeld() {

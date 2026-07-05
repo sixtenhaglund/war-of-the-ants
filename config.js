@@ -38,8 +38,8 @@ let bigMap = false;       // is the full-screen map open? (toggled with M)
 const DEBUG_SEE_ALL = true;
 
 // ---- the queen ----
-const queen = { x: WORLD_W / 2, y: WORLD_H / 2, speed: 100, angle: 0, hp: 12 };
-const QUEEN_HP = 12;                          // her full health (centipede bites chip this down)
+const queen = { x: WORLD_W / 2, y: WORLD_H / 2, speed: 100, angle: 0, hp: 20 };
+const QUEEN_HP = 20;                          // her full health (centipede bites chip this down)
 const DRAG_SLOW = 0.5;                        // she moves at HALF speed while dragging a heavy centipede
 
 // The ant's body = three ellipses in its own frame (it faces +x). The DRAWING
@@ -72,6 +72,8 @@ const ROCK_CHANCE = 0.3;                     // fewer solid blocks are hard rock
 const BIGROCK_COUNT = 45;                     // how many tough 2×2 rock blocks to scatter
 const BEETLE_HP = 2;                         // beetles die in 2 bites
 const BUG_LIMIT = 50;                         // total bugs on the map, spread evenly over caves
+const BEETLE_HEAL = 4;                        // eating a beetle (press E) restores 4 HP
+const CENTI_HEAL = 8;                         // eating a centipede restores 8 HP
 
 // ---- centipedes: long, hostile prey ----
 const CENTI_HP = 5;                           // tough: 5 bites to kill

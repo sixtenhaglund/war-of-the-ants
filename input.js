@@ -5,6 +5,7 @@ addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '=') cam.zoom = clamp(cam.zoom * 1.15, 0.6, 3);
   if (e.key === '-' || e.key === '_') cam.zoom = clamp(cam.zoom / 1.15, 0.6, 3);
   if (e.key === 'm' || e.key === 'M') bigMap = !bigMap;   // toggle the full-screen map
+  if ((e.key === 'e' || e.key === 'E') && !e.repeat) eat();  // eat prey to heal (once per press)
 });
 addEventListener('keyup', e => { keys[e.key] = false; });
 

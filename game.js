@@ -21,9 +21,13 @@ function update(dt) {
   }
   const movedDist = Math.hypot(queen.x - preX, queen.y - preY);
 
-  // legs animate only when she actually walks (not when just turning)
+  // legs animate only when she actually walks (not when just turning), and they
+  // cycle FASTER the faster she's actually moving: frac is how much of her top
+  // speed she managed this frame (slowed by dragging, or by scraping a wall).
   legActive = move !== 0 && movedDist > 0.1;
-  if (legActive) walkPhase += dt * 14;
+  const maxStep = queen.speed * dt;
+  const frac = maxStep > 0 ? movedDist / maxStep : 0;
+  if (legActive) walkPhase += dt * 22 * frac;
 
   // 3) biting: start on cooldown while held — but NOT while carrying something
   //    (her mouth is full). Damage lands when the jaws snap shut.
