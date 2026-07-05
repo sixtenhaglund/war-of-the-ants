@@ -71,18 +71,34 @@ function drawBeetleHp(b) {
   ctx.fillRect(x, y, w * (b.hp / BEETLE_HP), 3);
 }
 
-// the nest food pile — every beetle you deliver is drawn as a real (dead) beetle,
-// packed into the heap with a golden-angle spiral so they fan out evenly.
+// the nest food pile — every piece of prey you deliver is drawn as its real (dead)
+// self, packed into the heap with a golden-angle spiral so they fan out evenly.
 function drawFoodPile() {
   ctx.strokeStyle = 'rgba(255,215,120,0.4)'; ctx.lineWidth = 2;   // faint drop-spot ring
   ctx.beginPath(); ctx.arc(foodPile.x, foodPile.y, 22, 0, 6.28); ctx.stroke();
-  for (let k = 0; k < pileBeetles.length; k++) {
+  for (let k = 0; k < pileItems.length; k++) {
     const a = k * 2.399;                          // golden angle → even, non-overlapping spread
-    const rr = Math.sqrt(k) * 3.4;                // spiral outward from the centre
+    const rr = Math.sqrt(k) * 4;                  // spiral outward from the centre
     ctx.save();
     ctx.translate(foodPile.x + Math.cos(a) * rr, foodPile.y + Math.sin(a) * rr);
-    ctx.scale(0.72, 0.72);                        // little pile beetles
-    drawBeetle(0, 0, a * 2, true, false);         // dead = grey; a*2 spins each so the heap looks scattered
+    if (pileItems[k].type === 'centipede') {
+      ctx.rotate(a);                              // curl each centipede a different way
+      drawPileCentipede();                        // a small coiled dead centipede
+    } else {
+      ctx.scale(0.72, 0.72);
+      drawBeetle(0, 0, a * 2, true, false);       // dead = grey; a*2 spins each so the heap looks scattered
+    }
     ctx.restore();
+  }
+}
+
+// a little coiled dead centipede for the pile (caller has translated/rotated us in)
+function drawPileCentipede() {
+  ctx.fillStyle = '#6a6a6a';
+  for (let i = 0; i < 6; i++) {                    // a short arc of shrinking segments
+    const a = i * 0.5;
+    ctx.beginPath();
+    ctx.arc(Math.cos(a) * i * 2.2, Math.sin(a) * i * 2.2, 3.2 - i * 0.25, 0, 6.28);
+    ctx.fill();
   }
 }

@@ -109,8 +109,19 @@ function draw() {
     if (!b.dead) drawBeetleHp(b);                 // health bar over living beetles
   }
 
+  // centipedes you can currently SEE (the dragged one is drawn with the queen)
+  for (const c of centipedes) {
+    if (c.gone || c.carried) continue;
+    const cc = Math.floor(c.x / TILE), cr = Math.floor(c.y / TILE);
+    if (cc < 0 || cr < 0 || cc >= COLS || cr >= ROWS) continue;
+    if (!visible[cr * COLS + cc]) continue;
+    drawCentipede(c);
+    if (!c.dead) drawCentipedeHp(c);              // health bar over living centipedes
+  }
+
   drawParticles();                                // blood splatter
 
+  if (dragging) drawCentipede(dragging);          // the corpse she's hauling, under her body
   drawQueen();
 
   // the beetles she's hauling: the first BACK_CAP ride on her back; only once those
@@ -131,6 +142,22 @@ function draw() {
 
   ctx.restore();
   drawMinimap();
+  drawQueenHp();
+}
+
+// the queen's health bar, top-centre of the screen (drawn in screen coords)
+function drawQueenHp() {
+  const w = 220, h = 16, x = W / 2 - w / 2, y = 14;
+  const frac = clamp(queen.hp / QUEEN_HP, 0, 1);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+  ctx.fillStyle = frac > 0.5 ? '#46d068' : frac > 0.25 ? '#e8c060' : '#e0463c';  // green → yellow → red
+  ctx.fillRect(x, y, w * frac, h);
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 11px system-ui, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('QUEEN', W / 2, y + h - 4);
+  ctx.textAlign = 'left';                          // reset so other text isn't centred
 }
 
 // ---- minimap: blit the cached world image into a square box, bottom-left.
@@ -172,6 +199,12 @@ function drawMinimap() {
     const bc = Math.floor(b.x / TILE), br = Math.floor(b.y / TILE);
     if (bc < 0 || br < 0 || bc >= COLS || br >= ROWS || !explored[br * COLS + bc]) continue;
     markTile(bc, br, b.hostile ? '#e0463c' : '#4aa3ff');   // red if hostile, else blue
+  }
+  for (const c of centipedes) {                            // hostile centipedes = red
+    if (c.dead || c.gone || c.carried) continue;
+    const cc = Math.floor(c.x / TILE), cr = Math.floor(c.y / TILE);
+    if (cc < 0 || cr < 0 || cc >= COLS || cr >= ROWS || !explored[cr * COLS + cc]) continue;
+    markTile(cc, cr, '#e0463c');
   }
 
   // friends (green) — draw any you add to a `friends` array later

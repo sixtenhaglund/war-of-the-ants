@@ -14,9 +14,10 @@ function update(dt) {
   if (keys['s'] || keys['S']) move -= 1;
   const preX = queen.x, preY = queen.y;
   if (move !== 0) {
+    const spd = queen.speed * (dragging ? DRAG_SLOW : 1);   // heavy centipede slows her down
     const dx = Math.cos(queen.angle) * move;
     const dy = Math.sin(queen.angle) * move;
-    moveQueen(dx * queen.speed * dt, dy * queen.speed * dt);
+    moveQueen(dx * spd * dt, dy * spd * dt);
   }
   const movedDist = Math.hypot(queen.x - preX, queen.y - preY);
 
@@ -27,31 +28,26 @@ function update(dt) {
   // 3) biting: start on cooldown while held — but NOT while carrying something
   //    (her mouth is full). Damage lands when the jaws snap shut.
   if (biteCd > 0) biteCd -= dt;
-  if (mouseHeld && biteCd <= 0 && carried.length <= BACK_CAP) startBite();   // blocked only when a beetle's in her mouth
+  if (mouseHeld && biteCd <= 0 && carried.length <= BACK_CAP && !dragging) startBite();   // blocked when her mouth is busy
   if (bitePending && (BITE_COOLDOWN - biteCd) / BITE_ANIM >= BITE_IMPACT) {
     chompDamage();
     bitePending = false;
   }
 
   updateBeetles(dt);
+  updateCentipedes(dt);
+  updateDrag();                                 // keep the dragged centipede pinned to her mouth
   updateParticles(dt);
 
   // let just-dropped beetles lie a moment before they can be re-grabbed
   for (const b of beetles) if (b.noPickup > 0) b.noPickup -= dt;
 
-  // step onto the nest food pile → the WHOLE load becomes food and joins the heap
-  if (carried.length && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
-    for (const b of carried) {
-      foodCount += 2;                           // each beetle is worth 2 food
-      b.gone = true;
-      pileBeetles.push({ scale: 1 });           // remember it so the heap draws a real beetle
-    }
-    carried = [];
-  }
-
-  // HUD: food scored, plus how much she's hauling right now
+  // HUD: food in the pile (and its limit), plus what she's hauling right now
+  const load = carried.length + (dragging ? 1 : 0);
   document.getElementById('score').textContent =
-    '🪲 Food: ' + foodCount + (carried.length ? '   🐜 ' + carried.length + '/' + CARRY_CAP : '');
+    '🍖 Food: ' + foodCount + '/' + FOOD_LIMIT +
+    (foodCount >= FOOD_LIMIT ? '  (FULL)' : '') +
+    (load ? '   🐜 carrying ' + load : '');
 
   updateFog();
 
@@ -67,5 +63,5 @@ function loop(now) {
   last = now;
   update(dt);
   draw();
-  requestAnimationFrame(loop);
+  if (running) requestAnimationFrame(loop);          // death sets running=false → the loop halts
 }

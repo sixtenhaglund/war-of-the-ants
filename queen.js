@@ -46,33 +46,66 @@ function startBite() {
   bitePending = true;
 }
 
-// Grab the nearest dead beetle within reach — if her load isn't already full.
-// Returns true when she picks one up, so the click doesn't ALSO start a bite.
-function tryPickup() {
-  if (carried.length >= CARRY_CAP) return false;        // her mouth + back are full
-  let best = null, bestD = 26;                          // only beetles within reach count
-  for (const b of beetles) {
-    if (!b.dead || b.carried || b.gone || b.noPickup > 0) continue;
-    const d = Math.hypot(b.x - queen.x, b.y - queen.y);
-    if (d < bestD) { bestD = d; best = b; }             // keep the closest one
+// Grab the nearest dead prey within reach. A CENTIPEDE needs a free mouth (she
+// can't drag two, or drag with a beetle in her mouth); a BEETLE just needs a free
+// carry slot. Returns true when she grabs something, so the click doesn't bite.
+function tryGrab() {
+  // centipede first — it's the big prize, and dragging uses the mouth
+  if (!dragging && carried.length <= BACK_CAP) {
+    let best = null, bestD = 30;
+    for (const c of centipedes) {
+      if (!c.dead || c.carried || c.gone || c.noPickup > 0) continue;
+      const d = Math.hypot(c.x - queen.x, c.y - queen.y);
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    if (best) { best.carried = true; dragging = best; return true; }
   }
-  if (!best) return false;
-  best.carried = true;
-  carried.push(best);                                   // newest goes on top of the load
-  return true;
+  // otherwise a beetle onto her back/mouth (only BACK_CAP fit while a drag fills the mouth)
+  const cap = dragging ? BACK_CAP : CARRY_CAP;
+  if (carried.length < cap) {
+    let best = null, bestD = 26;
+    for (const b of beetles) {
+      if (!b.dead || b.carried || b.gone || b.noPickup > 0) continue;
+      const d = Math.hypot(b.x - queen.x, b.y - queen.y);
+      if (d < bestD) { bestD = d; best = b; }
+    }
+    if (best) { best.carried = true; carried.push(best); return true; }
+  }
+  return false;
 }
 
-// Spit the beetle in her mouth onto the ground in front of her, so she can pick
-// it up again later. A short grace stops her instantly re-grabbing it.
-function dropCarried() {
-  if (carried.length === 0) return;
-  const b = carried.pop();                              // the mouth one (last picked) comes out first
+// Standing on the nest pile and clicking DEPOSITS your whole load — beetles (2
+// food) and any dragged centipede (5 food) — up to the pile's FOOD_LIMIT. Returns
+// true if the click was "used up" near the pile, so it doesn't also mine.
+function tryDeposit() {
+  if (carried.length === 0 && !dragging) return false;              // nothing to drop
+  if (Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) >= 44) return false;  // not on the pile
+
+  while (carried.length && foodCount < FOOD_LIMIT) {                // dump the beetles
+    const b = carried.shift(); b.gone = true;
+    foodCount = Math.min(FOOD_LIMIT, foodCount + 2);
+    pileItems.push({ type: 'beetle' });
+  }
+  if (dragging && foodCount < FOOD_LIMIT) {                         // then the centipede
+    dragging.gone = true; dragging = null;
+    foodCount = Math.min(FOOD_LIMIT, foodCount + CENTI_FOOD);
+    pileItems.push({ type: 'centipede' });
+  }
+  return true;                                                      // consume the click either way
+}
+
+// Right-click drops what's in her mouth in front of her: the dragged centipede
+// first (it fills the mouth), else the top beetle. A grace stops instant re-grab.
+function dropHeld() {
   let dx = queen.x + Math.cos(queen.angle) * 20;        // just in front of her
   let dy = queen.y + Math.sin(queen.angle) * 20;
   if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
-  b.x = dx; b.y = dy;
-  b.carried = false;
-  b.noPickup = 0.8;                                      // seconds before it can be re-grabbed
+  const thing = dragging || carried.pop();
+  if (!thing) return;
+  if (dragging) dragging = null;
+  thing.x = dx; thing.y = dy;
+  thing.carried = false;
+  thing.noPickup = 0.8;
 }
 
 // The real chomp — runs at the snap. Hits a beetle if one's in front, else rock.
@@ -80,15 +113,18 @@ function chompDamage() {
   const fx = queen.x + Math.cos(queen.angle) * NOSE;
   const fy = queen.y + Math.sin(queen.angle) * NOSE;
 
-  // a living beetle in front? Beetles die in 2 bites, then become a pickup.
-  for (const b of beetles) {
-    if (b.dead || b.gone || b.carried) continue;
-    if (Math.hypot(b.x - fx, b.y - fy) < 16) {
-      b.hp -= 1;
-      spawnBlood(b.x, b.y, 8);                 // splatter on the hit
-      if (b.hp <= 0) { b.dead = true; spawnBlood(b.x, b.y, 14); }  // extra on the kill
-      return;                                 // a bite lands on one thing
-    }
+  // a living creature in front? Find the closest beetle OR centipede in reach and
+  // chomp it. Beetles die in 2 bites, centipedes in 5 — then they become prey.
+  let target = null, td = 16;
+  for (const b of beetles)    { if (b.dead || b.gone || b.carried) continue;
+    const d = Math.hypot(b.x - fx, b.y - fy); if (d < td) { td = d; target = b; } }
+  for (const c of centipedes) { if (c.dead || c.gone || c.carried) continue;
+    const d = Math.hypot(c.x - fx, c.y - fy); if (d < td) { td = d; target = c; } }
+  if (target) {
+    target.hp -= 1;
+    spawnBlood(target.x, target.y, 8);          // splatter on the hit
+    if (target.hp <= 0) { target.dead = true; spawnBlood(target.x, target.y, 14); }  // extra on the kill
+    return;                                     // a bite lands on one thing
   }
 
   // otherwise chew the rock in front

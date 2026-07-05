@@ -42,9 +42,12 @@ function buildWorld() {
 
   // scatter open CAVES through the rock — some small, some big — with beetles.
   beetles = [];
+  centipedes = [];
   carried = [];
+  dragging = null;
   foodCount = 0;
-  pileBeetles = [];
+  pileItems = [];
+  queen.x = WORLD_W / 2; queen.y = WORLD_H / 2; queen.angle = 0; queen.hp = QUEEN_HP;
   const placed = [];                            // caves already dropped, so new ones keep their distance
   for (let n = 0; n < 140; n++) {
     const cc = 3 + Math.floor(Math.random() * (COLS - 6));
@@ -88,6 +91,14 @@ function buildWorld() {
       hp: BEETLE_HP, angle: rand(0, 6.28), wanderT: 0,
       dead: false, carried: false, gone: false,
     });
+  }
+
+  // scatter CENTIPEDES too — offset into different caves from the beetles so they
+  // aren't all sharing one room.
+  for (let k = 0; k < CENTI_LIMIT && placed.length > 0; k++) {
+    const cave = placed[(k * 7 + 3) % placed.length];
+    const ccx = cave.cc * TILE + TILE / 2, ccy = cave.cr * TILE + TILE / 2;
+    centipedes.push(makeCentipede(ccx + rand(-20, 20), ccy + rand(-20, 20)));
   }
 
   // dig thin TUNNELS linking nearby caves into networks: each cave connects to

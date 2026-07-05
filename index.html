@@ -12,14 +12,21 @@
 <div id="menu">
   <h1>WAR OF THE ANTS</h1>
   <button onclick="startGame()">PLAY</button>
-  <button onclick="alert('Steer with the mouse, W/S to move. Hold click to mine walls and bite beetles. Beetles die in 2 bites — carry the body back to the food pile in your nest for 2 food. Scroll to zoom.')">HOW TO PLAY</button>
+  <button onclick="alert('Steer with the mouse, W/S to move. Hold left-click to mine walls and bite bugs.\n\nBeetles (2 bites) are harmless — left-click a dead one to carry it (2 on your back + 1 in your mouth).\n\nCentipedes (5 bites) HUNT you and bite — watch your health bar! A dead centipede is too heavy to carry: left-click it to DRAG it (you move at half speed), worth 5 food.\n\nStand on the food pile in your nest and left-click to deposit your load (pile holds 20). Right-click drops what is in your mouth. Scroll to zoom.')">HOW TO PLAY</button>
+</div>
+
+<!-- ===== GAME OVER ===== -->
+<div id="dead">
+  <h1>THE QUEEN HAS FALLEN</h1>
+  <p>A centipede got you.</p>
+  <button onclick="restartGame()">TRY AGAIN</button>
 </div>
 
 <!-- ===== GAME ===== -->
 <div id="game">
   <canvas id="cv"></canvas>
-  <div id="hint">Mouse to steer &nbsp;·&nbsp; W forward / S back &nbsp;·&nbsp; Hold click to mine / bite &nbsp;·&nbsp; Kill beetles &amp; carry them to the nest pile (2 food each)</div>
-  <div id="score">🪲 Food: 0</div>
+  <div id="hint">Mouse to steer &nbsp;·&nbsp; W / S move &nbsp;·&nbsp; Hold click to mine / bite &nbsp;·&nbsp; Left-click prey to carry / drag &nbsp;·&nbsp; Click the pile to deposit &nbsp;·&nbsp; Right-click to drop</div>
+  <div id="score">🍖 Food: 0/20</div>
 </div>
 
 <!-- Game code, split into files. Order matters: config first (it defines the
@@ -28,6 +35,7 @@
 <script src="world.js"></script>
 <script src="queen.js"></script>
 <script src="beetles.js"></script>
+<script src="centipedes.js"></script>
 <script src="particles.js"></script>
 <script src="render.js"></script>
 <script src="input.js"></script>

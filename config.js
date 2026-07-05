@@ -20,11 +20,14 @@ let hits;                 // how many bites this block has taken (saved!)
 let bigId;                // for a 2×2 big-rock tile: its block's top-left index (else -1)
 let explored, visible;    // fog: seen-before? / seen right now?
 let beetles = [];         // bugs living in the caves
+let centipedes = [];      // long, hostile prey that hunts and bites the queen
 let carried = [];         // dead beetles she's hauling: the first BACK_CAP ride on her back, the next in her mouth
+let dragging = null;      // a dead centipede being DRAGGED by the mouth (too big to carry) — or null
 const BACK_CAP = 2;       // beetles that fit on her back (mouth stays free, so she can still mine)
 const CARRY_CAP = 3;      // total she can hold = 2 on the back + 1 in the mouth
-let foodCount = 0;        // beetles delivered to the nest food pile
-let pileBeetles = [];     // one entry per beetle dropped on the pile, so the heap shows REAL beetles
+let foodCount = 0;        // food delivered to the nest pile
+const FOOD_LIMIT = 20;    // the pile is FULL at 20 food — you can't stuff in more
+let pileItems = [];       // one entry per thing dropped on the pile, so the heap shows REAL prey
 let particles = [];       // blood droplets etc.
 let W, H;                 // screen size
 let running = false;
@@ -35,7 +38,9 @@ let bigMap = false;       // is the full-screen map open? (toggled with M)
 const DEBUG_SEE_ALL = true;
 
 // ---- the queen ----
-const queen = { x: WORLD_W / 2, y: WORLD_H / 2, speed: 100, angle: 0 };
+const queen = { x: WORLD_W / 2, y: WORLD_H / 2, speed: 100, angle: 0, hp: 12 };
+const QUEEN_HP = 12;                          // her full health (centipede bites chip this down)
+const DRAG_SLOW = 0.5;                        // she moves at HALF speed while dragging a heavy centipede
 
 // The ant's body = three ellipses in its own frame (it faces +x). The DRAWING
 // and the HITBOX both read this data, so the hitbox matches the ant exactly.
@@ -67,6 +72,19 @@ const ROCK_CHANCE = 0.3;                     // fewer solid blocks are hard rock
 const BIGROCK_COUNT = 45;                     // how many tough 2×2 rock blocks to scatter
 const BEETLE_HP = 2;                         // beetles die in 2 bites
 const BUG_LIMIT = 50;                         // total bugs on the map, spread evenly over caves
+
+// ---- centipedes: long, hostile prey ----
+const CENTI_HP = 5;                           // tough: 5 bites to kill
+const CENTI_FOOD = 5;                         // worth 5 food when dragged to the pile
+const CENTI_LIMIT = 12;                       // how many roam the caves
+const CENTI_SEGS = 11;                        // body segments (drives its length)
+const CENTI_SEG_SPACING = 7;                  // pixels between segments
+const CENTI_CHASE = 210;                      // it starts hunting the queen within this range
+const CENTI_ATTACK = 26;                      // and bites her once this close
+const CENTI_DMG = 1;                          // damage per bite
+const CENTI_BITE_CD = 1.1;                    // seconds between its bites
+const CENTI_SPEED = 70;                       // hunting speed (a touch slower than the queen)
+const CENTI_WANDER = 26;                      // idle wander speed
 const BITE_COOLDOWN = 1.0;                   // seconds between bites (the wait)
 const BITE_ANIM = 0.45;                      // how long the bite ANIMATION takes
 const BITE_IMPACT = 0.75;                    // point in the animation (0..1) where jaws snap → damage
