@@ -37,27 +37,36 @@ function updateCentipedes(dt) {
 
     if (c.biteCd > 0) c.biteCd -= dt;
 
-    // pick a target: the QUEEN or the nearest living BEETLE, whichever is closest
-    // and inside its chase range. Centipedes are predators — they hunt both.
-    let tx = 0, ty = 0, best = CENTI_CHASE;
+    // A centipede sits in a size hierarchy. It FLEES anything bigger (and, if it's
+    // a timid small one, the queen too), and HUNTS anything smaller (beetles,
+    // smaller centipedes, and — if it's aggressive — the queen). Survival first:
+    // if a threat is near it runs; otherwise it chases the nearest prey.
+    let thX = 0, thY = 0, thD = CENTI_FLEE;       // nearest threat (to flee)
+    let pyX = 0, pyY = 0, pyD = CENTI_CHASE;      // nearest prey (to hunt)
+
     const qd = Math.hypot(queen.x - c.x, queen.y - c.y);
-    if (qd < best) { best = qd; tx = queen.x; ty = queen.y; }
-    for (const b of beetles) {
+    if (c.type.timid) { if (qd < thD) { thD = qd; thX = queen.x; thY = queen.y; } }   // scared of the queen
+    else              { if (qd < pyD) { pyD = qd; pyX = queen.x; pyY = queen.y; } }   // hunts the queen
+
+    for (const b of beetles) {                    // beetles are always prey
       if (b.dead || b.gone || b.carried) continue;
       const d = Math.hypot(b.x - c.x, b.y - c.y);
-      if (d < best) { best = d; tx = b.x; ty = b.y; }
+      if (d < pyD) { pyD = d; pyX = b.x; pyY = b.y; }
     }
-    const hasTarget = best < CENTI_CHASE;
+    for (const o of centipedes) {                 // bigger centipedes = threat, smaller = prey
+      if (o === c || o.dead || o.gone || o.carried) continue;
+      const d = Math.hypot(o.x - c.x, o.y - c.y);
+      if (o.type.segs > c.type.segs) { if (d < thD) { thD = d; thX = o.x; thY = o.y; } }
+      else if (o.type.segs < c.type.segs) { if (d < pyD) { pyD = d; pyX = o.x; pyY = o.y; } }
+    }
 
-    if (hasTarget) {
-      // HUNT: crawl straight at the target, sliding along any wall it meets
-      c.angle = Math.atan2(ty - c.y, tx - c.x);
-      const mvx = Math.cos(c.angle) * c.type.speed * dt;
-      const mvy = Math.sin(c.angle) * c.type.speed * dt;
-      if (!isRock(c.x + mvx, c.y)) c.x += mvx;
-      if (!isRock(c.x, c.y + mvy)) c.y += mvy;
-    } else {
-      // WANDER slowly when the queen is far away
+    if (thD < CENTI_FLEE) {                        // FLEE: bolt straight away from the threat
+      c.angle = Math.atan2(c.y - thY, c.x - thX);
+      crawl(c, c.type.speed * dt);
+    } else if (pyD < CENTI_CHASE) {                // HUNT: crawl at the prey
+      c.angle = Math.atan2(pyY - c.y, pyX - c.x);
+      crawl(c, c.type.speed * dt);
+    } else {                                       // WANDER when nothing's around
       c.wanderT -= dt;
       if (c.wanderT <= 0) { c.angle = rand(0, 6.28); c.wanderT = rand(0.8, 2.2); }
       const mvx = Math.cos(c.angle) * CENTI_WANDER * dt;
@@ -67,29 +76,34 @@ function updateCentipedes(dt) {
     }
     followSegs(c);                                // body trails the head
 
-    // catch & eat any living beetle its head reaches (the beetle just vanishes)
+    // catch & eat prey its head reaches: living beetles, then smaller centipedes
     for (const b of beetles) {
       if (b.dead || b.gone || b.carried) continue;
-      if (Math.hypot(b.x - c.x, b.y - c.y) < CENTI_ATTACK) {
-        b.gone = true; spawnBlood(b.x, b.y, 8); break;
-      }
+      if (Math.hypot(b.x - c.x, b.y - c.y) < CENTI_ATTACK) { b.gone = true; spawnBlood(b.x, b.y, 8); break; }
+    }
+    for (const o of centipedes) {
+      if (o === c || o.dead || o.gone || o.carried || o.type.segs >= c.type.segs) continue;
+      if (Math.hypot(o.x - c.x, o.y - c.y) < CENTI_ATTACK) { o.gone = true; spawnBlood(o.x, o.y, 10); break; }
     }
 
-    // it bites with its HEAD only — the tail is harmless (you can brush past it)
-    if (c.biteCd <= 0) {
-      const hd = Math.hypot(c.x - queen.x, c.y - queen.y);   // c.x/c.y is the head
-      if (hd < CENTI_ATTACK) {
-        queen.hp -= c.type.dmg;
-        c.biteCd = CENTI_BITE_CD;
-        spawnBlood(queen.x, queen.y, 6);
-        // knock her AWAY from the head
-        const ax = queen.x - c.x, ay = queen.y - c.y, ad = Math.hypot(ax, ay) || 1;
-        const kx = (ax / ad) * 6, ky = (ay / ad) * 6;
-        if (!isRock(queen.x + kx, queen.y + ky)) { queen.x += kx; queen.y += ky; }
-        if (queen.hp <= 0) gameOver();
-      }
+    // aggressive types bite the QUEEN with their HEAD (the tail is harmless)
+    if (!c.type.timid && c.biteCd <= 0 && qd < CENTI_ATTACK) {
+      queen.hp -= c.type.dmg;
+      c.biteCd = CENTI_BITE_CD;
+      spawnBlood(queen.x, queen.y, 6);
+      const ax = queen.x - c.x, ay = queen.y - c.y, ad = Math.hypot(ax, ay) || 1;   // knock her away
+      const kx = (ax / ad) * 6, ky = (ay / ad) * 6;
+      if (!isRock(queen.x + kx, queen.y + ky)) { queen.x += kx; queen.y += ky; }
+      if (queen.hp <= 0) gameOver();
     }
   }
+}
+
+// crawl the centipede head along c.angle by sp, sliding along any wall it meets
+function crawl(c, sp) {
+  const mvx = Math.cos(c.angle) * sp, mvy = Math.sin(c.angle) * sp;
+  if (!isRock(c.x + mvx, c.y)) c.x += mvx;
+  if (!isRock(c.x, c.y + mvy)) c.y += mvy;
 }
 
 // while dragging, the corpse's head is pinned to the queen's mouth and the rest
@@ -163,8 +177,15 @@ function drawCentipedeHp(c) {
   ctx.fillStyle = '#e04030'; ctx.fillRect(x, y, w * (c.hp / c.maxHp), 3);
 }
 
-// ---- the queen has died ----
+// ---- the queen has been slain ----
+// She's the queen — she can't truly die. She's revived at the nest at full health
+// and the world carries on exactly as it was, as if it never happened.
 function gameOver() {
-  running = false;                               // the loop stops scheduling itself
-  document.getElementById('dead').style.display = 'flex';
+  // drop whatever she was holding where she fell, so nothing is lost
+  for (const b of carried) { b.carried = false; b.x = queen.x; b.y = queen.y; b.noPickup = 0.6; }
+  carried = [];
+  if (dragging) { dragging.carried = false; dragging.noPickup = 0.6; dragging = null; }
+  dragFlip = 0;
+  queen.x = WORLD_W / 2; queen.y = WORLD_H / 2; queen.angle = 0; queen.hp = QUEEN_HP;
+  reviveFlash = 2.5;                              // brief on-screen "revived" banner
 }

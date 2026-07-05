@@ -42,6 +42,8 @@ function update(dt) {
   const flipTarget = dragging ? 1 : 0;
   dragFlip += (flipTarget - dragFlip) * Math.min(1, dt * 7);
 
+  if (reviveFlash > 0) reviveFlash -= dt;       // fade out the "revived" banner
+
   updateBeetles(dt);
   updateCentipedes(dt);
   updateDrag();                                 // keep the dragged centipede pinned to her mouth

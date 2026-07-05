@@ -2,7 +2,7 @@
 
 // living beetles wander slowly around their cave — but PANIC and run away when
 // the queen gets close. They bounce off rock either way.
-const FLEE_RANGE = 140;   // how close the queen can get before a beetle bolts
+const FLEE_RANGE = 170;   // how close a threat can get before a beetle bolts (they're alert)
 function updateBeetles(dt) {
   for (const b of beetles) {
     if (b.dead || b.gone || b.carried) continue;
@@ -17,14 +17,21 @@ function updateBeetles(dt) {
     const dx = b.x - tx, dy = b.y - ty;             // vector pointing AWAY from that threat
 
     if (dist < FLEE_RANGE) {
-      // PANIC: run straight away from the queen. If a wall blocks one direction,
-      // just SLIDE along it (move the clear axis) — never randomise the angle, or
-      // the beetle spins frantically pressed against the rock.
-      const inv = dist > 0.001 ? 1 / dist : 1;
-      const mvx = dx * inv * 52 * dt, mvy = dy * inv * 52 * dt;
+      // PANIC, but SMART: it wants to run straight away, but if a wall is that way
+      // it looks for the escape heading CLOSEST to "straight away" that's actually
+      // open — checking wider and wider angles left & right — so it rounds corners
+      // and slips down tunnels instead of grinding into the rock.
+      const away = Math.atan2(dy, dx);
+      let esc = away;
+      for (const off of [0, 0.4, -0.4, 0.9, -0.9, 1.4, -1.4, 2.0, -2.0]) {
+        const a = away + off;
+        if (!isRock(b.x + Math.cos(a) * 24, b.y + Math.sin(a) * 24)) { esc = a; break; }
+      }
+      const sp = 60 * dt;             // a bit faster than a wander — real fright
+      const mvx = Math.cos(esc) * sp, mvy = Math.sin(esc) * sp;
       if (!isRock(b.x + mvx, b.y)) b.x += mvx;
       if (!isRock(b.x, b.y + mvy)) b.y += mvy;
-      b.angle = Math.atan2(dy, dx);   // face steadily away from the queen
+      b.angle = esc;
       b.wanderT = rand(0.2, 0.6);     // don't fall back into an old wander mid-panic
       b.idle = false;                 // never idle while running
     } else {

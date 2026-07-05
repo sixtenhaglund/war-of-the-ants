@@ -24,6 +24,7 @@ let centipedes = [];      // long, hostile prey that hunts and bites the queen
 let carried = [];         // dead beetles she's hauling: the first BACK_CAP ride on her back, the next in her mouth
 let dragging = null;      // a dead centipede being DRAGGED by the mouth (too big to carry) — or null
 let dragFlip = 0;         // 0..1 eased turn-around: 1 = fully spun around to haul, 0 = facing normally
+let reviveFlash = 0;      // seconds left on the "revived at the nest" banner after a death
 const BACK_CAP = 2;       // beetles that fit on her back (mouth stays free, so she can still mine)
 const CARRY_CAP = 3;      // total she can hold = 2 on the back + 1 in the mouth
 let foodCount = 0;        // food delivered to the nest pile
@@ -79,14 +80,15 @@ const BEETLE_HEAL = 3;                        // eating a beetle (press E) resto
 //      Bigger ones are longer, tougher, hit harder, and give more food — but they
 //      crawl slower. Each spawned centipede picks a type and copies these numbers. ----
 const CENTI_TYPES = [
-  // name        segs spacing  hp  dmg food heal  rMul  speed  colour     shade
-  { name: 'small',  segs: 8,  spacing: 6, hp: 3, dmg: 1, food: 3, heal: 5,  rMul: 0.8, speed: 84, col: '#c46a2a', dark: '#9c4d1a' },
+  // name        segs spacing  hp  dmg food heal  rMul  speed  colour     shade      timid=runs from the queen
+  { name: 'small',  segs: 8,  spacing: 6, hp: 3, dmg: 1, food: 3, heal: 5,  rMul: 0.8, speed: 84, col: '#c46a2a', dark: '#9c4d1a', timid: true },
   { name: 'medium', segs: 12, spacing: 7, hp: 5, dmg: 1, food: 5, heal: 8,  rMul: 1.0, speed: 70, col: '#8a3320', dark: '#642415' },
   { name: 'giant',  segs: 16, spacing: 8, hp: 9, dmg: 2, food: 10, heal: 12, rMul: 1.3, speed: 54, col: '#701818', dark: '#460d0d' },
 ];
 const CENTI_LIMIT = 12;                       // how many roam the caves
-const CENTI_CHASE = 210;                      // it starts hunting the queen within this range
-const CENTI_ATTACK = 26;                      // and bites her once this close (its HEAD, not tail)
+const CENTI_CHASE = 210;                      // it starts hunting prey within this range
+const CENTI_FLEE = 175;                       // and bolts from a bigger threat within this range
+const CENTI_ATTACK = 26;                      // it catches / bites once this close (its HEAD, not tail)
 const CENTI_BITE_CD = 1.1;                    // seconds between its bites
 const CENTI_WANDER = 26;                      // idle wander speed
 const BITE_COOLDOWN = 1.0;                   // seconds between bites (the wait)

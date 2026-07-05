@@ -41,12 +41,3 @@ function startGame() {
   if (!grid) buildWorld();
   if (!running) { running = true; requestAnimationFrame(loop); }
 }
-
-// after the queen dies: rebuild a fresh world (full health) and start the loop again
-function restartGame() {
-  document.getElementById('dead').style.display = 'none';
-  buildWorld();                 // fresh caves + a full-health queen
-  last = performance.now();     // reset the clock so the first frame doesn't jump
-  running = true;
-  requestAnimationFrame(loop);
-}

@@ -143,6 +143,18 @@ function draw() {
   ctx.restore();
   drawMinimap();
   drawQueenHp();
+  if (reviveFlash > 0) drawReviveFlash();
+}
+
+// a brief banner after a death: the queen was slain and revived at the nest
+function drawReviveFlash() {
+  ctx.globalAlpha = clamp(reviveFlash / 2.5, 0, 1);      // fade out over its lifetime
+  ctx.fillStyle = '#e0463c';
+  ctx.font = 'bold 34px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('The queen was slain — revived at the nest', W / 2, H / 2 - 40);
+  ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
 }
 
 // the queen's health bar, top-centre of the screen (drawn in screen coords)
