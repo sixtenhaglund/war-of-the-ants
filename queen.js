@@ -66,7 +66,7 @@ function tryPickup() {
 // it up again later. A short grace stops her instantly re-grabbing it.
 function dropCarried() {
   if (carried.length === 0) return;
-  const b = carried.shift();                            // the mouth one comes out first
+  const b = carried.pop();                              // the mouth one (last picked) comes out first
   let dx = queen.x + Math.cos(queen.angle) * 20;        // just in front of her
   let dy = queen.y + Math.sin(queen.angle) * 20;
   if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
