@@ -58,7 +58,7 @@ function update(dt) {
   // the goal, plus what she's hauling right now
   const load = carried.length + (dragging ? 1 : 0);
   document.getElementById('score').textContent =
-    '🍖 Food: ' + pileFood() + '/' + FOOD_GOAL +
+    '🍖 Food: ' + pileFood() +
     (load ? '   🐜 carrying ' + load : '');
 
   updateFog();
