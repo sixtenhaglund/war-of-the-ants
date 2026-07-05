@@ -60,11 +60,11 @@ function updateCentipedes(dt) {
       else if (o.type.segs < c.type.segs) { if (d < pyD) { pyD = d; pyX = o.x; pyY = o.y; } }
     }
 
-    if (thD < CENTI_FLEE) {                        // FLEE: bolt straight away from the threat
-      c.angle = Math.atan2(c.y - thY, c.x - thX);
+    if (thD < CENTI_FLEE) {                        // FLEE: bolt away from the threat, rounding corners
+      c.angle = openHeading(c.x, c.y, Math.atan2(c.y - thY, c.x - thX), 20);
       crawl(c, c.type.speed * dt);
-    } else if (pyD < CENTI_CHASE) {                // HUNT: crawl at the prey
-      c.angle = Math.atan2(pyY - c.y, pyX - c.x);
+    } else if (pyD < CENTI_CHASE) {                // HUNT: crawl at the prey, routing around walls
+      c.angle = openHeading(c.x, c.y, Math.atan2(pyY - c.y, pyX - c.x), 20);
       crawl(c, c.type.speed * dt);
     } else {                                       // WANDER when nothing's around
       c.wanderT -= dt;
@@ -86,8 +86,9 @@ function updateCentipedes(dt) {
       if (Math.hypot(o.x - c.x, o.y - c.y) < CENTI_ATTACK) { o.gone = true; spawnBlood(o.x, o.y, 10); break; }
     }
 
-    // aggressive types bite the QUEEN with their HEAD (the tail is harmless)
-    if (!c.type.timid && c.biteCd <= 0 && qd < CENTI_ATTACK) {
+    // aggressive types bite the QUEEN with their HEAD (the tail is harmless) — but
+    // only with real line of sight, so it can't reach her THROUGH a wall
+    if (!c.type.timid && c.biteCd <= 0 && qd < CENTI_ATTACK && clearLine(c.x, c.y, queen.x, queen.y)) {
       queen.hp -= c.type.dmg;
       c.biteCd = CENTI_BITE_CD;
       spawnBlood(queen.x, queen.y, 6);

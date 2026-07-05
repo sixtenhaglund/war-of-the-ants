@@ -103,6 +103,7 @@ const keys = {};                             // which keyboard keys are down
 
 // the nest food pile — carry dead beetles here to score them
 const foodPile = { x: WORLD_W / 2 + 60, y: WORLD_H / 2 };
+const PILE_RADIUS = 74;                       // how close counts as "on the pile" for depositing / eating
 
 const mouse = { x: innerWidth / 2, y: innerHeight / 2 };  // last known mouse (screen)
 const TURN_RATE = 6.5;   // how fast she glides to face the mouse

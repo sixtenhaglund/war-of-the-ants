@@ -79,7 +79,7 @@ function tryGrab() {
 // true if the click was "used up" near the pile, so it doesn't also mine.
 function tryDeposit() {
   if (carried.length === 0 && !dragging) return false;              // nothing to drop
-  if (Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) >= 44) return false;  // not on the pile
+  if (Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) >= PILE_RADIUS) return false;  // not on the pile
 
   while (carried.length && foodCount < FOOD_LIMIT) {                // dump the beetles
     const b = carried.shift(); b.gone = true;
@@ -89,7 +89,8 @@ function tryDeposit() {
   if (dragging && foodCount < FOOD_LIMIT) {                         // then the centipede (its size sets the value)
     dragging.gone = true;
     foodCount = Math.min(FOOD_LIMIT, foodCount + dragging.type.food);
-    pileItems.push({ type: 'centipede', food: dragging.type.food, heal: dragging.type.heal });
+    pileItems.push({ type: 'centipede', food: dragging.type.food, heal: dragging.type.heal,
+                     rMul: dragging.type.rMul, col: dragging.type.col });   // remember its size & colour
     dragging = null;
   }
   return true;                                                      // consume the click either way
@@ -113,25 +114,31 @@ function eat() {
     return;
   }
   // hands empty → eat from the pile if she's standing on it (each item remembers its heal)
-  if (pileItems.length && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
+  if (pileItems.length && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < PILE_RADIUS) {
     const item = pileItems.pop();                          // take one off the heap
     foodCount = Math.max(0, foodCount - item.food);
     queen.hp = Math.min(QUEEN_HP, queen.hp + item.heal);
   }
 }
 
-// Right-click drops what's in her mouth in front of her: the dragged centipede
-// first (it fills the mouth), else the top beetle. A grace stops instant re-grab.
+// Right-click drops what's in her mouth. A dragged centipede is released EXACTLY
+// where it already lies (its long body is on the ground — moving it would make it
+// teleport). A beetle, which has no body on the ground, is set down in front of her.
 function dropHeld() {
-  let dx = queen.x + Math.cos(queen.angle) * 20;        // just in front of her
+  if (dragging) {                                       // let the centipede lie right where it is
+    dragging.carried = false;
+    dragging.noPickup = 0.8;
+    dragging = null;
+    return;
+  }
+  const b = carried.pop();
+  if (!b) return;
+  let dx = queen.x + Math.cos(queen.angle) * 20;        // set the beetle just in front of her
   let dy = queen.y + Math.sin(queen.angle) * 20;
   if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
-  const thing = dragging || carried.pop();
-  if (!thing) return;
-  if (dragging) dragging = null;
-  thing.x = dx; thing.y = dy;
-  thing.carried = false;
-  thing.noPickup = 0.8;
+  b.x = dx; b.y = dy;
+  b.carried = false;
+  b.noPickup = 0.8;
 }
 
 // The real chomp — runs at the snap. Hits a beetle if one's in front, else rock.

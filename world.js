@@ -199,6 +199,32 @@ function isRock(px, py) {
   return grid[r * COLS + c] === true;
 }
 
+// Find a heading close to `want` that ISN'T blocked by rock a step ahead. Searches
+// outward from `want` on both sides — a tiny turn first, then wider, and finally
+// even sideways/backward — so a cornered creature squeezes out any gap it can find
+// instead of grinding into the wall and freezing. Returns `want` only if truly boxed in.
+function openHeading(x, y, want, step) {
+  step = step || 22;
+  const offs = [0, 0.4, -0.4, 0.9, -0.9, 1.4, -1.4, 2.0, -2.0, 2.6, -2.6, Math.PI];
+  for (const o of offs) {
+    const a = want + o;
+    if (!isRock(x + Math.cos(a) * step, y + Math.sin(a) * step)) return a;
+  }
+  return want;
+}
+
+// Is the straight line from (x0,y0) to (x1,y1) free of rock? Samples every ~7px,
+// so a creature can't reach/bite THROUGH a wall — it needs real line of sight.
+function clearLine(x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0;
+  const steps = Math.max(2, Math.ceil(Math.hypot(dx, dy) / 7));
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    if (isRock(x0 + dx * t, y0 + dy * t)) return false;
+  }
+  return true;
+}
+
 // how many bites a block needs to break: big rock > grey rock > soft dirt
 function maxHits(i) { return hard[i] === 2 ? BIGROCK_HP : hard[i] ? ROCK_HP : DIRT_HP; }
 
