@@ -122,6 +122,7 @@ function draw() {
     const isMouth = k >= BACK_CAP;                       // slot 3 = the mouth
     if (isMouth) {
       drawBeetle(17, 0, Math.PI / 2, true, false);       // clamped crosswise in her jaws, like a real ant
+      drawMandible(1, BODY_PARTS[2].x, 0);               // one jaw laid OVER the beetle → looks gripped
     } else {
       drawBeetle(-8 - k * 7, 0, 0, true, true);          // back ones lie flat over her abdomen
     }

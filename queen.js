@@ -121,6 +121,27 @@ function chompDamage() {
   if (hits[i] >= maxHits(i)) { grid[i] = false; hits[i] = 0; stampMini(c, r); }  // breaks
 }
 
+// Draw ONE mandible (side = -1 or 1), hinged at head-front hx and opened by
+// jawAngle. The caller has already moved into the queen's local frame. Pulled out
+// of drawQueen so a jaw can also be drawn OVER the beetle in her mouth (the
+// clamped look) — one jaw behind it, one in front.
+function drawMandible(side, hx, jawAngle) {
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#c8c8c8'; ctx.lineWidth = 0.6;
+  ctx.save();
+  ctx.translate(hx + 4, side * 2);              // hinge at the head's front corner
+  ctx.rotate(side * jawAngle);
+  ctx.scale(0.65, 0.65);                         // shrink the whole jaw shape
+  ctx.beginPath();
+  ctx.moveTo(0, side * 1.5);
+  ctx.quadraticCurveTo(5, side * 3, 8, side * 0.3);   // outer edge → sharp tip
+  ctx.quadraticCurveTo(4, side * 1, 0, side * -0.5);  // inner edge hooks back
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawQueen() {
   ctx.save();
   ctx.translate(queen.x, queen.y);
@@ -148,22 +169,7 @@ function drawQueen() {
 
   // small white mandibles that snap shut on the strike
   const jawAngle = keyed(e, [[0, 0], [0.45, 0.55], [0.75, -0.05], [1, 0]]);
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#c8c8c8'; ctx.lineWidth = 0.6;
-  for (const side of [-1, 1]) {
-    ctx.save();
-    ctx.translate(hx + 4, side * 2);            // hinge at the head's front corner
-    ctx.rotate(side * jawAngle);
-    ctx.scale(0.65, 0.65);                       // shrink the whole jaw shape
-    ctx.beginPath();
-    ctx.moveTo(0, side * 1.5);
-    ctx.quadraticCurveTo(5, side * 3, 8, side * 0.3);   // outer edge → sharp tip
-    ctx.quadraticCurveTo(4, side * 1, 0, side * -0.5);  // inner edge hooks back
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-  }
+  for (const side of [-1, 1]) drawMandible(side, hx, jawAngle);
 
   ctx.restore();
 }
