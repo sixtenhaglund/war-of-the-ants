@@ -120,8 +120,11 @@ function draw() {
     ctx.translate(queen.x, queen.y);
     ctx.rotate(queen.angle);
     const isMouth = k >= BACK_CAP;                       // slot 3 = the mouth
-    const bx = isMouth ? 16 : -8 - k * 7;                // mouth = 16; back ones stack over her abdomen
-    drawBeetle(bx, 0, 0, true, true);
+    if (isMouth) {
+      drawBeetle(17, 0, Math.PI / 2, true, false);       // clamped crosswise in her jaws, like a real ant
+    } else {
+      drawBeetle(-8 - k * 7, 0, 0, true, true);          // back ones lie flat over her abdomen
+    }
     ctx.restore();
   }
 
