@@ -111,25 +111,6 @@ function pileBodies() {
 // total food stocked in the pile = sum of the food values of those bodies
 function pileFood() { let s = 0; for (const it of pileBodies()) s += it.food; return s; }
 
-// Drop your WHOLE load into the pile: the bodies STAY THERE on the ground (just
-// like a normal drop), so they still count as food and can be picked up again.
-function depositLoad() {
-  for (const b of carried) {                              // scatter the beetles around the spot
-    b.carried = false;
-    b.x = foodPile.x + rand(-34, 34);
-    b.y = foodPile.y + rand(-34, 34);
-    b.noPickup = 0.4;
-  }
-  carried = [];
-  if (dragging) {                                         // set the centipede down on the pile (its body reforms there)
-    dragging.carried = false;
-    dragging.x = foodPile.x + rand(-24, 24);
-    dragging.y = foodPile.y + rand(-24, 24);
-    dragging.noPickup = 0.4;
-    dragging = null;
-  }
-}
-
 // Press E: eat what's in her mouth to heal (centipede, then beetle). With empty
 // jaws on the pile, it opens the pile menu so you can SEE and CHOOSE what to eat.
 function eat() {
@@ -194,31 +175,34 @@ function eatFromPile(type, heal) {
   renderPileMenu();
 }
 
-// Right-click drops what she's holding. Over the food pile, the WHOLE load goes
-// straight in as food (just drop the prey in there). Elsewhere it's set on the
-// ground: a dragged centipede is released EXACTLY where it lies (its long body is
-// on the ground — moving it would teleport it); a beetle is set down in front.
+// Right-click drops ONE thing she's holding — the dragged centipede first, else the
+// top beetle — one per press. Standing on the pile, it's set down ON the pile (so it
+// counts as food and stacks up one by one). Elsewhere a beetle is set in front of
+// her, and a centipede is released EXACTLY where it lies (moving it would teleport it).
 function dropHeld() {
-  if ((carried.length || dragging) &&
-      Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < PILE_RADIUS) {
-    depositLoad();                                      // on the pile → deposit everything
-    return;
-  }
+  const onPile = Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < PILE_RADIUS;
 
-  if (dragging) {                                       // let the centipede lie right where it is
+  if (dragging) {
     dragging.carried = false;
-    dragging.noPickup = 0.8;
+    if (onPile) { dragging.x = foodPile.x + rand(-24, 24); dragging.y = foodPile.y + rand(-24, 24); }
+    dragging.noPickup = 0.4;
     dragging = null;
     return;
   }
+
   const b = carried.pop();
   if (!b) return;
-  let dx = queen.x + Math.cos(queen.angle) * 20;        // set the beetle just in front of her
-  let dy = queen.y + Math.sin(queen.angle) * 20;
-  if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
-  b.x = dx; b.y = dy;
+  if (onPile) {                                         // one beetle onto the pile
+    b.x = foodPile.x + rand(-34, 34);
+    b.y = foodPile.y + rand(-34, 34);
+  } else {                                              // set it just in front of her
+    let dx = queen.x + Math.cos(queen.angle) * 20;
+    let dy = queen.y + Math.sin(queen.angle) * 20;
+    if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }
+    b.x = dx; b.y = dy;
+  }
   b.carried = false;
-  b.noPickup = 0.8;
+  b.noPickup = 0.4;
 }
 
 // The real chomp — runs at the snap. Hits a beetle if one's in front, else rock.
