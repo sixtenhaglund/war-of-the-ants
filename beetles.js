@@ -7,8 +7,14 @@ function updateBeetles(dt) {
   for (const b of beetles) {
     if (b.dead || b.gone || b.carried) continue;
 
-    const dx = b.x - queen.x, dy = b.y - queen.y;   // vector pointing AWAY from her
-    const dist = Math.hypot(dx, dy);
+    // run from the nearest THREAT — the queen, or a hunting centipede's head
+    let tx = queen.x, ty = queen.y, dist = Math.hypot(b.x - queen.x, b.y - queen.y);
+    for (const c of centipedes) {
+      if (c.dead || c.gone || c.carried) continue;
+      const d = Math.hypot(b.x - c.x, b.y - c.y);
+      if (d < dist) { dist = d; tx = c.x; ty = c.y; }
+    }
+    const dx = b.x - tx, dy = b.y - ty;             // vector pointing AWAY from that threat
 
     if (dist < FLEE_RANGE) {
       // PANIC: run straight away from the queen. If a wall blocks one direction,

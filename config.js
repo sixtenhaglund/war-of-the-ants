@@ -73,7 +73,7 @@ const ROCK_CHANCE = 0.3;                     // fewer solid blocks are hard rock
 const BIGROCK_COUNT = 45;                     // how many tough 2×2 rock blocks to scatter
 const BEETLE_HP = 2;                         // beetles die in 2 bites
 const BUG_LIMIT = 50;                         // total bugs on the map, spread evenly over caves
-const BEETLE_HEAL = 4;                        // eating a beetle (press E) restores 4 HP
+const BEETLE_HEAL = 3;                        // eating a beetle (press E) restores 3 HP
 
 // ---- centipedes: long, hostile prey. THREE sizes, each with its own stats.
 //      Bigger ones are longer, tougher, hit harder, and give more food — but they
@@ -82,7 +82,7 @@ const CENTI_TYPES = [
   // name        segs spacing  hp  dmg food heal  rMul  speed  colour     shade
   { name: 'small',  segs: 8,  spacing: 6, hp: 3, dmg: 1, food: 3, heal: 5,  rMul: 0.8, speed: 84, col: '#c46a2a', dark: '#9c4d1a' },
   { name: 'medium', segs: 12, spacing: 7, hp: 5, dmg: 1, food: 5, heal: 8,  rMul: 1.0, speed: 70, col: '#8a3320', dark: '#642415' },
-  { name: 'giant',  segs: 16, spacing: 8, hp: 9, dmg: 2, food: 9, heal: 12, rMul: 1.3, speed: 54, col: '#701818', dark: '#460d0d' },
+  { name: 'giant',  segs: 16, spacing: 8, hp: 9, dmg: 2, food: 10, heal: 12, rMul: 1.3, speed: 54, col: '#701818', dark: '#460d0d' },
 ];
 const CENTI_LIMIT = 12;                       // how many roam the caves
 const CENTI_CHASE = 210;                      // it starts hunting the queen within this range

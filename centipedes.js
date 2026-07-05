@@ -36,11 +36,22 @@ function updateCentipedes(dt) {
     if (c.dead) { followSegs(c); continue; }      // a still corpse — keep its body coherent
 
     if (c.biteCd > 0) c.biteCd -= dt;
-    const dx = queen.x - c.x, dy = queen.y - c.y, dist = Math.hypot(dx, dy);
 
-    if (dist < CENTI_CHASE) {
-      // HUNT: crawl straight at the queen, sliding along any wall it meets
-      c.angle = Math.atan2(dy, dx);
+    // pick a target: the QUEEN or the nearest living BEETLE, whichever is closest
+    // and inside its chase range. Centipedes are predators — they hunt both.
+    let tx = 0, ty = 0, best = CENTI_CHASE;
+    const qd = Math.hypot(queen.x - c.x, queen.y - c.y);
+    if (qd < best) { best = qd; tx = queen.x; ty = queen.y; }
+    for (const b of beetles) {
+      if (b.dead || b.gone || b.carried) continue;
+      const d = Math.hypot(b.x - c.x, b.y - c.y);
+      if (d < best) { best = d; tx = b.x; ty = b.y; }
+    }
+    const hasTarget = best < CENTI_CHASE;
+
+    if (hasTarget) {
+      // HUNT: crawl straight at the target, sliding along any wall it meets
+      c.angle = Math.atan2(ty - c.y, tx - c.x);
       const mvx = Math.cos(c.angle) * c.type.speed * dt;
       const mvy = Math.sin(c.angle) * c.type.speed * dt;
       if (!isRock(c.x + mvx, c.y)) c.x += mvx;
@@ -55,6 +66,14 @@ function updateCentipedes(dt) {
       if (!isRock(c.x, c.y + mvy)) c.y += mvy; else c.angle = rand(0, 6.28);
     }
     followSegs(c);                                // body trails the head
+
+    // catch & eat any living beetle its head reaches (the beetle just vanishes)
+    for (const b of beetles) {
+      if (b.dead || b.gone || b.carried) continue;
+      if (Math.hypot(b.x - c.x, b.y - c.y) < CENTI_ATTACK) {
+        b.gone = true; spawnBlood(b.x, b.y, 8); break;
+      }
+    }
 
     // it bites with its HEAD only — the tail is harmless (you can brush past it)
     if (c.biteCd <= 0) {
