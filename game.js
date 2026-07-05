@@ -8,10 +8,13 @@ function update(dt) {
   queen.angle += angleDiff(queen.angle, targetAngle) * Math.min(1, dt * TURN_RATE);
   pushOutOfWalls();   // if turning shoved her into rock, slide her out
 
-  // 2) W forward, S back — always along the way she faces
+  // 2) W forward, S back. But while DRAGGING she's spun around to face the corpse,
+  //    so the keys flip: S drives her forward (into the mouse) and W backs up — the
+  //    keys match which way her body is actually pointing.
   let move = 0;
   if (keys['w'] || keys['W']) move += 1;
   if (keys['s'] || keys['S']) move -= 1;
+  if (dragging) move = -move;
   const preX = queen.x, preY = queen.y;
   if (move !== 0) {
     const spd = queen.speed * (dragging ? DRAG_SLOW : 1);   // heavy centipede slows her down

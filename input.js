@@ -17,17 +17,15 @@ canvas.addEventListener('wheel', e => {
 // track the mouse so the queen can steer toward it
 canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
-// left click, in priority order: drop your load on the pile → grab dead prey in
-// reach → otherwise hold to mine / bite
+// left click: grab dead prey in reach → otherwise hold to mine / bite
 canvas.addEventListener('mousedown', e => {
   if (e.button !== 0) return;                // only the left button mines / grabs
-  if (tryDeposit()) return;                  // standing on the pile → deposit the load
   if (tryGrab()) return;                     // grab a dead beetle / centipede
   mouseHeld = true;
 });
 addEventListener('mouseup', () => { mouseHeld = false; });
 
-// right click: drop whatever's in her mouth back onto the ground
+// right click: drop what she's holding — into the pile if she's on it, else on the ground
 canvas.addEventListener('contextmenu', e => { e.preventDefault(); dropHeld(); });
 
 function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }

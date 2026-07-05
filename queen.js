@@ -74,13 +74,10 @@ function tryGrab() {
   return false;
 }
 
-// Standing on the nest pile and clicking DEPOSITS your whole load — beetles (2
-// food) and any dragged centipede (5 food) — up to the pile's FOOD_LIMIT. Returns
-// true if the click was "used up" near the pile, so it doesn't also mine.
-function tryDeposit() {
-  if (carried.length === 0 && !dragging) return false;              // nothing to drop
-  if (Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) >= PILE_RADIUS) return false;  // not on the pile
-
+// Drop your WHOLE load into the nest pile as food — beetles (2 food) and any
+// dragged centipede (its size's food) — up to the pile's FOOD_LIMIT. Called by
+// dropHeld when she's standing on the pile (just drop the prey in, no clicking).
+function depositLoad() {
   while (carried.length && foodCount < FOOD_LIMIT) {                // dump the beetles
     const b = carried.shift(); b.gone = true;
     foodCount = Math.min(FOOD_LIMIT, foodCount + 2);
@@ -89,11 +86,9 @@ function tryDeposit() {
   if (dragging && foodCount < FOOD_LIMIT) {                         // then the centipede (its size sets the value)
     dragging.gone = true;
     foodCount = Math.min(FOOD_LIMIT, foodCount + dragging.type.food);
-    pileItems.push({ type: 'centipede', food: dragging.type.food, heal: dragging.type.heal,
-                     rMul: dragging.type.rMul, col: dragging.type.col });   // remember its size & colour
+    pileItems.push({ type: 'centipede', food: dragging.type.food, heal: dragging.type.heal });
     dragging = null;
   }
-  return true;                                                      // consume the click either way
 }
 
 // Press E to EAT prey and restore health: the centipede in her mouth heals 8, a
@@ -121,10 +116,17 @@ function eat() {
   }
 }
 
-// Right-click drops what's in her mouth. A dragged centipede is released EXACTLY
-// where it already lies (its long body is on the ground — moving it would make it
-// teleport). A beetle, which has no body on the ground, is set down in front of her.
+// Right-click drops what she's holding. Over the food pile, the WHOLE load goes
+// straight in as food (just drop the prey in there). Elsewhere it's set on the
+// ground: a dragged centipede is released EXACTLY where it lies (its long body is
+// on the ground — moving it would teleport it); a beetle is set down in front.
 function dropHeld() {
+  if ((carried.length || dragging) &&
+      Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < PILE_RADIUS) {
+    depositLoad();                                      // on the pile → deposit everything
+    return;
+  }
+
   if (dragging) {                                       // let the centipede lie right where it is
     dragging.carried = false;
     dragging.noPickup = 0.8;
