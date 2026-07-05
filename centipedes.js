@@ -44,20 +44,22 @@ function updateCentipedes(dt) {
     let thX = 0, thY = 0, thD = CENTI_FLEE;       // nearest threat (to flee)
     let pyX = 0, pyY = 0, pyD = CENTI_CHASE;      // nearest prey (to hunt)
 
+    // It only NOTICES something it can actually SEE — clearLine blocks vision through
+    // walls (checked only once a candidate is the closest so far, to stay cheap).
     const qd = Math.hypot(queen.x - c.x, queen.y - c.y);
-    if (c.type.timid) { if (qd < thD) { thD = qd; thX = queen.x; thY = queen.y; } }   // scared of the queen
-    else              { if (qd < pyD) { pyD = qd; pyX = queen.x; pyY = queen.y; } }   // hunts the queen
+    if (c.type.timid) { if (qd < thD && clearLine(c.x, c.y, queen.x, queen.y)) { thD = qd; thX = queen.x; thY = queen.y; } }   // scared of the queen
+    else              { if (qd < pyD && clearLine(c.x, c.y, queen.x, queen.y)) { pyD = qd; pyX = queen.x; pyY = queen.y; } }   // hunts the queen
 
     for (const b of beetles) {                    // beetles are always prey
       if (b.dead || b.gone || b.carried) continue;
       const d = Math.hypot(b.x - c.x, b.y - c.y);
-      if (d < pyD) { pyD = d; pyX = b.x; pyY = b.y; }
+      if (d < pyD && clearLine(c.x, c.y, b.x, b.y)) { pyD = d; pyX = b.x; pyY = b.y; }
     }
     for (const o of centipedes) {                 // bigger centipedes = threat, smaller = prey
       if (o === c || o.dead || o.gone || o.carried) continue;
       const d = Math.hypot(o.x - c.x, o.y - c.y);
-      if (o.type.segs > c.type.segs) { if (d < thD) { thD = d; thX = o.x; thY = o.y; } }
-      else if (o.type.segs < c.type.segs) { if (d < pyD) { pyD = d; pyX = o.x; pyY = o.y; } }
+      if (o.type.segs > c.type.segs) { if (d < thD && clearLine(c.x, c.y, o.x, o.y)) { thD = d; thX = o.x; thY = o.y; } }
+      else if (o.type.segs < c.type.segs) { if (d < pyD && clearLine(c.x, c.y, o.x, o.y)) { pyD = d; pyX = o.x; pyY = o.y; } }
     }
 
     if (thD < CENTI_FLEE) {                        // FLEE: bolt away from the threat, rounding corners
