@@ -211,13 +211,16 @@ function chompDamage() {
   const fy = queen.y + Math.sin(queen.angle) * NOSE;
 
   // a living creature in front? Find the closest beetle OR centipede in reach and
-  // chomp it. Beetles die in 2 bites, centipedes in 5 — then they become prey.
+  // chomp it — but only with clear line of sight, so she can't bite one THROUGH a
+  // wall (diagonal gaps included). Beetles die in 2 bites, centipedes in 5.
   let target = null, td = 16;
   for (const b of beetles)    { if (b.dead || b.gone || b.carried) continue;
-    const d = Math.hypot(b.x - fx, b.y - fy); if (d < td) { td = d; target = b; } }
+    const d = Math.hypot(b.x - fx, b.y - fy);
+    if (d < td && clearLine(queen.x, queen.y, b.x, b.y)) { td = d; target = b; } }
   for (const c of centipedes) { if (c.dead || c.gone || c.carried) continue;
     for (const s of c.segs) {                   // whole body is a hitbox: bite ANY segment
-      const d = Math.hypot(s.x - fx, s.y - fy); if (d < td) { td = d; target = c; } } }
+      const d = Math.hypot(s.x - fx, s.y - fy);
+      if (d < td && clearLine(queen.x, queen.y, s.x, s.y)) { td = d; target = c; } } }
   if (target) {
     target.hp -= 1;
     spawnBlood(target.x, target.y, 8);          // splatter on the hit
