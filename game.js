@@ -27,7 +27,7 @@ function update(dt) {
   // 3) biting: start on cooldown while held — but NOT while carrying something
   //    (her mouth is full). Damage lands when the jaws snap shut.
   if (biteCd > 0) biteCd -= dt;
-  if (mouseHeld && biteCd <= 0 && !carrying) startBite();
+  if (mouseHeld && biteCd <= 0 && carried.length === 0) startBite();
   if (bitePending && (BITE_COOLDOWN - biteCd) / BITE_ANIM >= BITE_IMPACT) {
     chompDamage();
     bitePending = false;
@@ -36,25 +36,22 @@ function update(dt) {
   updateBeetles(dt);
   updateParticles(dt);
 
-  // pick up a dead beetle you walk over (if your jaws are empty)
-  if (!carrying) {
-    for (const b of beetles) {
-      if (!b.dead || b.carried || b.gone) continue;
-      if (b.noPickup > 0) { b.noPickup -= dt; continue; }    // just dropped → let it lie a moment
-      if (Math.hypot(b.x - queen.x, b.y - queen.y) < 20) {
-        b.carried = true;
-        carrying = { kind: 'beetle', food: 2, beetle: b };   // beetle = 2 food
-        break;
-      }
+  // let just-dropped beetles lie a moment before they can be re-grabbed
+  for (const b of beetles) if (b.noPickup > 0) b.noPickup -= dt;
+
+  // step onto the nest food pile → the WHOLE load becomes food and joins the heap
+  if (carried.length && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
+    for (const b of carried) {
+      foodCount += 2;                           // each beetle is worth 2 food
+      b.gone = true;
+      pileBeetles.push({ scale: 1 });           // remember it so the heap draws a real beetle
     }
+    carried = [];
   }
-  // drop whatever you're carrying on the nest food pile → it becomes food
-  if (carrying && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < 44) {
-    foodCount += carrying.food;                 // a beetle is worth 2 food
-    if (carrying.beetle) carrying.beetle.gone = true;
-    carrying = null;
-    document.getElementById('score').textContent = '🪲 Food: ' + foodCount;
-  }
+
+  // HUD: food scored, plus how much she's hauling right now
+  document.getElementById('score').textContent =
+    '🪲 Food: ' + foodCount + (carried.length ? '   🐜 ' + carried.length + '/' + CARRY_CAP : '');
 
   updateFog();
 

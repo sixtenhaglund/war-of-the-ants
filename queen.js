@@ -46,20 +46,33 @@ function startBite() {
   bitePending = true;
 }
 
-// drop whatever the queen is carrying onto the ground in front of her, so she
-// can pick it up again later. A short grace stops her instantly re-grabbing it.
-function dropCarried() {
-  if (!carrying) return;
-  const b = carrying.beetle;
-  if (b) {
-    let dx = queen.x + Math.cos(queen.angle) * 20;   // just in front of her
-    let dy = queen.y + Math.sin(queen.angle) * 20;
-    if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
-    b.x = dx; b.y = dy;
-    b.carried = false;
-    b.noPickup = 0.8;                                 // seconds before it can be re-grabbed
+// Grab the nearest dead beetle within reach — if her load isn't already full.
+// Returns true when she picks one up, so the click doesn't ALSO start a bite.
+function tryPickup() {
+  if (carried.length >= CARRY_CAP) return false;        // her mouth + back are full
+  let best = null, bestD = 26;                          // only beetles within reach count
+  for (const b of beetles) {
+    if (!b.dead || b.carried || b.gone || b.noPickup > 0) continue;
+    const d = Math.hypot(b.x - queen.x, b.y - queen.y);
+    if (d < bestD) { bestD = d; best = b; }             // keep the closest one
   }
-  carrying = null;
+  if (!best) return false;
+  best.carried = true;
+  carried.push(best);                                   // newest goes on top of the load
+  return true;
+}
+
+// Spit the beetle in her mouth onto the ground in front of her, so she can pick
+// it up again later. A short grace stops her instantly re-grabbing it.
+function dropCarried() {
+  if (carried.length === 0) return;
+  const b = carried.shift();                            // the mouth one comes out first
+  let dx = queen.x + Math.cos(queen.angle) * 20;        // just in front of her
+  let dy = queen.y + Math.sin(queen.angle) * 20;
+  if (isRock(dx, dy)) { dx = queen.x; dy = queen.y; }   // fall back to her feet if that's rock
+  b.x = dx; b.y = dy;
+  b.carried = false;
+  b.noPickup = 0.8;                                      // seconds before it can be re-grabbed
 }
 
 // The real chomp — runs at the snap. Hits a beetle if one's in front, else rock.

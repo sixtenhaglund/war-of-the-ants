@@ -42,8 +42,9 @@ function buildWorld() {
 
   // scatter open CAVES through the rock — some small, some big — with beetles.
   beetles = [];
-  carrying = null;
+  carried = [];
   foodCount = 0;
+  pileBeetles = [];
   const placed = [];                            // caves already dropped, so new ones keep their distance
   for (let n = 0; n < 140; n++) {
     const cc = 3 + Math.floor(Math.random() * (COLS - 6));

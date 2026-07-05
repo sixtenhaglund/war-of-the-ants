@@ -16,12 +16,16 @@ canvas.addEventListener('wheel', e => {
 // track the mouse so the queen can steer toward it
 canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
-// click while carrying → drop the food on the ground; otherwise hold to mine / bite
-canvas.addEventListener('mousedown', () => {
-  if (carrying) { dropCarried(); return; }   // consume this click so she doesn't bite
+// left click: grab a dead beetle in reach (if she has room); otherwise hold to mine / bite
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;                // only the left button mines / grabs
+  if (tryPickup()) return;                   // picked one up → consume the click so she doesn't bite
   mouseHeld = true;
 });
 addEventListener('mouseup', () => { mouseHeld = false; });
+
+// right click: spit the beetle in her mouth back onto the ground
+canvas.addEventListener('contextmenu', e => { e.preventDefault(); dropCarried(); });
 
 function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
 addEventListener('resize', () => { if (running) resize(); });

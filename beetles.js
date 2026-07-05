@@ -71,17 +71,18 @@ function drawBeetleHp(b) {
   ctx.fillRect(x, y, w * (b.hp / BEETLE_HP), 3);
 }
 
-// the nest food pile — a heap that grows as you deliver beetles
+// the nest food pile — every beetle you deliver is drawn as a real (dead) beetle,
+// packed into the heap with a golden-angle spiral so they fan out evenly.
 function drawFoodPile() {
   ctx.strokeStyle = 'rgba(255,215,120,0.4)'; ctx.lineWidth = 2;   // faint drop-spot ring
   ctx.beginPath(); ctx.arc(foodPile.x, foodPile.y, 22, 0, 6.28); ctx.stroke();
-  const n = foodCount * 3;
-  for (let k = 0; k < n; k++) {
-    const a = k * 2.399;                          // golden-angle spiral fills the heap
-    const rr = 2 + Math.sqrt(k) * 3;
-    ctx.fillStyle = k % 2 ? '#8a8a8a' : '#707070';
-    ctx.beginPath();
-    ctx.arc(foodPile.x + Math.cos(a) * rr, foodPile.y + Math.sin(a) * rr, 4, 0, 6.28);
-    ctx.fill();
+  for (let k = 0; k < pileBeetles.length; k++) {
+    const a = k * 2.399;                          // golden angle → even, non-overlapping spread
+    const rr = Math.sqrt(k) * 3.4;                // spiral outward from the centre
+    ctx.save();
+    ctx.translate(foodPile.x + Math.cos(a) * rr, foodPile.y + Math.sin(a) * rr);
+    ctx.scale(0.72, 0.72);                        // little pile beetles
+    drawBeetle(0, 0, a * 2, true, false);         // dead = grey; a*2 spins each so the heap looks scattered
+    ctx.restore();
   }
 }

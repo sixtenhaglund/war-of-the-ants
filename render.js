@@ -113,11 +113,13 @@ function draw() {
 
   drawQueen();
 
-  if (carrying) {                                 // the beetle held in her mouth
+  // the beetles she's hauling: [0] rides in her mouth out front, the rest on her back
+  for (let k = 0; k < carried.length; k++) {
     ctx.save();
     ctx.translate(queen.x, queen.y);
     ctx.rotate(queen.angle);
-    drawBeetle(16, 0, 0, true, true);             // out front, in her jaws
+    const bx = k === 0 ? 16 : -6 - k * 6;         // mouth = 16; back ones stack over her abdomen
+    drawBeetle(bx, 0, 0, true, true);
     ctx.restore();
   }
 
