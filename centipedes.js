@@ -54,20 +54,15 @@ function updateCentipedes(dt) {
     }
     followSegs(c);                                // body trails the head
 
-    // WHOLE-BODY hitbox: if ANY segment is touching the queen, it bites her (on
-    // cooldown) — so brushing the tail hurts just as much as the head.
+    // it bites with its HEAD only — the tail is harmless (you can brush past it)
     if (c.biteCd <= 0) {
-      let hit = null, hd = CENTI_ATTACK;
-      for (const s of c.segs) {
-        const d = Math.hypot(s.x - queen.x, s.y - queen.y);
-        if (d < hd) { hd = d; hit = s; }         // nearest touching segment
-      }
-      if (hit) {
+      const hd = Math.hypot(c.x - queen.x, c.y - queen.y);   // c.x/c.y is the head
+      if (hd < CENTI_ATTACK) {
         queen.hp -= CENTI_DMG;
         c.biteCd = CENTI_BITE_CD;
         spawnBlood(queen.x, queen.y, 6);
-        // knock her AWAY from the segment that hit her
-        const ax = queen.x - hit.x, ay = queen.y - hit.y, ad = Math.hypot(ax, ay) || 1;
+        // knock her AWAY from the head
+        const ax = queen.x - c.x, ay = queen.y - c.y, ad = Math.hypot(ax, ay) || 1;
         const kx = (ax / ad) * 6, ky = (ay / ad) * 6;
         if (!isRock(queen.x + kx, queen.y + ky)) { queen.x += kx; queen.y += ky; }
         if (queen.hp <= 0) gameOver();

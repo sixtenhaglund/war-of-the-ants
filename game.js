@@ -38,6 +38,10 @@ function update(dt) {
     bitePending = false;
   }
 
+  // glide the turn-around: ease dragFlip toward 1 while dragging, back to 0 when not
+  const flipTarget = dragging ? 1 : 0;
+  dragFlip += (flipTarget - dragFlip) * Math.min(1, dt * 7);
+
   updateBeetles(dt);
   updateCentipedes(dt);
   updateDrag();                                 // keep the dragged centipede pinned to her mouth

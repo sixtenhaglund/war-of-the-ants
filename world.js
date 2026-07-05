@@ -45,6 +45,7 @@ function buildWorld() {
   centipedes = [];
   carried = [];
   dragging = null;
+  dragFlip = 0;
   foodCount = 0;
   pileItems = [];
   queen.x = WORLD_W / 2; queen.y = WORLD_H / 2; queen.angle = 0; queen.hp = QUEEN_HP;

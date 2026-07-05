@@ -23,6 +23,7 @@ let beetles = [];         // bugs living in the caves
 let centipedes = [];      // long, hostile prey that hunts and bites the queen
 let carried = [];         // dead beetles she's hauling: the first BACK_CAP ride on her back, the next in her mouth
 let dragging = null;      // a dead centipede being DRAGGED by the mouth (too big to carry) — or null
+let dragFlip = 0;         // 0..1 eased turn-around: 1 = fully spun around to haul, 0 = facing normally
 const BACK_CAP = 2;       // beetles that fit on her back (mouth stays free, so she can still mine)
 const CARRY_CAP = 3;      // total she can hold = 2 on the back + 1 in the mouth
 let foodCount = 0;        // food delivered to the nest pile

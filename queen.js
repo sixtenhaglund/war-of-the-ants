@@ -206,9 +206,9 @@ function drawMandible(side, hx, jawAngle) {
 
 // which way the queen's BODY points when drawn. Normally she faces her heading,
 // but while DRAGGING a centipede she turns around — she grips it and hauls it
-// backward, like a real ant, so her head points at the corpse trailing behind.
+// backward, like a real ant. dragFlip eases 0→1 so the turn GLIDES, not snaps.
 function queenFacing() {
-  return dragging ? queen.angle + Math.PI : queen.angle;
+  return queen.angle + dragFlip * Math.PI;
 }
 
 function drawQueen() {
