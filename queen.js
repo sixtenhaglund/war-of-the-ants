@@ -80,13 +80,31 @@ function tryGrab() {
 // is this creature lying inside the pile ring?
 function inPile(o) { return Math.hypot(o.x - foodPile.x, o.y - foodPile.y) < PILE_RADIUS; }
 
-// every dead, uncarried body currently in the pile, tagged with its food/heal value
+// how much healing a body has LEFT. Prey have "charges": each starts full, and
+// eating only spends what the queen needs — the rest stays on the body for later.
+function chargeLeft(entity, full) { return entity.charge != null ? entity.charge : full; }
+
+// Eat some of a body's healing. If the queen needs 1 HP but the body could give 3,
+// it heals 1 and KEEPS 2 for next time. The body is only used up (gone) once its
+// charges hit zero. Returns true if it actually healed.
+function eatBody(entity, full) {
+  const need = QUEEN_HP - queen.hp;
+  if (need <= 0) return false;                            // already full — leave the body untouched
+  if (entity.charge == null) entity.charge = full;        // first bite fills its reservoir
+  const amt = Math.min(need, entity.charge);
+  queen.hp += amt;
+  entity.charge -= amt;
+  if (entity.charge <= 0) entity.gone = true;             // all charges spent → used up
+  return true;
+}
+
+// every dead, uncarried body currently in the pile, tagged with food + heal LEFT
 function pileBodies() {
   const out = [];
   for (const b of beetles)    if (b.dead && !b.gone && !b.carried && inPile(b))
-    out.push({ e: b, type: 'beetle',    food: 2,           heal: BEETLE_HEAL });
+    out.push({ e: b, type: 'beetle',    food: 2,           full: BEETLE_HEAL, heal: chargeLeft(b, BEETLE_HEAL) });
   for (const c of centipedes) if (c.dead && !c.gone && !c.carried && inPile(c))
-    out.push({ e: c, type: 'centipede', food: c.type.food, heal: c.type.heal });
+    out.push({ e: c, type: 'centipede', food: c.type.food, full: c.type.heal,  heal: chargeLeft(c, c.type.heal) });
   return out;
 }
 
@@ -117,15 +135,13 @@ function depositLoad() {
 function eat() {
   if (pileMenuOpen) { closePileMenu(); return; }          // E also closes the menu
 
-  if (dragging && queen.hp < QUEEN_HP) {                  // eat the dragged centipede (bigger = more HP)
-    dragging.gone = true;
-    queen.hp = Math.min(QUEEN_HP, queen.hp + dragging.type.heal);
-    dragging = null;
+  if (dragging) {                                         // nibble the dragged centipede
+    if (eatBody(dragging, dragging.type.heal) && dragging.gone) dragging = null;  // release only if fully eaten
     return;
   }
-  if (carried.length && queen.hp < QUEEN_HP) {            // eat the beetle in her mouth
-    carried.pop().gone = true;
-    queen.hp = Math.min(QUEEN_HP, queen.hp + BEETLE_HEAL);
+  if (carried.length) {                                   // nibble the beetle in her mouth
+    const b = carried[carried.length - 1];
+    if (eatBody(b, BEETLE_HEAL) && b.gone) carried.pop();  // drop it only once it's used up
     return;
   }
   togglePileMenu();                                       // hands empty → choose from the pile
@@ -166,12 +182,12 @@ function renderPileMenu() {
   }
 }
 
-// eat one body of the chosen kind straight from the pile, then refresh the menu
+// eat one body of the chosen kind (matched by its heal-left) straight from the pile,
+// spending only the charges the queen needs, then refresh the menu
 function eatFromPile(type, heal) {
   for (const it of pileBodies()) {
     if (it.type === type && it.heal === heal) {
-      it.e.gone = true;                                   // that body is eaten
-      queen.hp = Math.min(QUEEN_HP, queen.hp + heal);
+      eatBody(it.e, it.full);                             // spends charges; body stays if any are left
       break;
     }
   }
