@@ -27,9 +27,8 @@ let dragFlip = 0;         // 0..1 eased turn-around: 1 = fully spun around to ha
 let reviveFlash = 0;      // seconds left on the "revived at the nest" banner after a death
 const BACK_CAP = 2;       // beetles that fit on her back (mouth stays free, so she can still mine)
 const CARRY_CAP = 3;      // total she can hold = 2 on the back + 1 in the mouth
-let foodCount = 0;        // food delivered to the nest pile
-const FOOD_LIMIT = 20;    // the pile is FULL at 20 food — you can't stuff in more
-let pileItems = [];       // one entry per thing dropped on the pile, so the heap shows REAL prey
+const FOOD_GOAL = 20;     // a target amount of food to stock the nest pile with (a goal, not a cap)
+let pileMenuOpen = false; // is the "what's in the pile" eat-menu open? (pauses the game)
 let particles = [];       // blood droplets etc.
 let W, H;                 // screen size
 let running = false;

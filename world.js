@@ -46,8 +46,7 @@ function buildWorld() {
   carried = [];
   dragging = null;
   dragFlip = 0;
-  foodCount = 0;
-  pileItems = [];
+  pileMenuOpen = false;
   queen.x = WORLD_W / 2; queen.y = WORLD_H / 2; queen.angle = 0; queen.hp = QUEEN_HP;
   const placed = [];                            // caves already dropped, so new ones keep their distance
   for (let n = 0; n < 140; n++) {
@@ -213,14 +212,34 @@ function openHeading(x, y, want, step) {
   return want;
 }
 
-// Is the straight line from (x0,y0) to (x1,y1) free of rock? Samples every ~7px,
-// so a creature can't reach/bite THROUGH a wall — it needs real line of sight.
+// is the tile at (c,r) solid? (tile coords, not pixels)
+function isRockTile(c, r) {
+  if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return true;
+  return grid[r * COLS + c] === true;
+}
+
+// True line-of-sight from (x0,y0) to (x1,y1): walk EVERY tile the segment crosses
+// (a grid DDA) and block on rock. Crucially, when the line slips exactly between
+// two tiles that touch only at a corner, it blocks if either side is rock — so a
+// creature can't reach/bite through a DIAGONAL gap, only through a real opening.
 function clearLine(x0, y0, x1, y1) {
+  let cx = Math.floor(x0 / TILE), cy = Math.floor(y0 / TILE);
+  const ex = Math.floor(x1 / TILE), ey = Math.floor(y1 / TILE);
   const dx = x1 - x0, dy = y1 - y0;
-  const steps = Math.max(2, Math.ceil(Math.hypot(dx, dy) / 7));
-  for (let i = 1; i < steps; i++) {
-    const t = i / steps;
-    if (isRock(x0 + dx * t, y0 + dy * t)) return false;
+  const stepX = dx > 0 ? 1 : -1, stepY = dy > 0 ? 1 : -1;
+  const invx = dx !== 0 ? 1 / Math.abs(dx) : Infinity;
+  const invy = dy !== 0 ? 1 / Math.abs(dy) : Infinity;
+  // distance (as t in 0..1) to the next grid line in each axis
+  let tMaxX = dx !== 0 ? (dx > 0 ? (cx + 1) * TILE - x0 : x0 - cx * TILE) * invx : Infinity;
+  let tMaxY = dy !== 0 ? (dy > 0 ? (cy + 1) * TILE - y0 : y0 - cy * TILE) * invy : Infinity;
+  const tDx = TILE * invx, tDy = TILE * invy;
+  for (let guard = 0; (cx !== ex || cy !== ey) && guard < 400; guard++) {
+    if (Math.abs(tMaxX - tMaxY) < 1e-6) {          // exact corner crossing — no diagonal squeeze
+      if (isRockTile(cx + stepX, cy) || isRockTile(cx, cy + stepY)) return false;
+      cx += stepX; cy += stepY; tMaxX += tDx; tMaxY += tDy;
+    } else if (tMaxX < tMaxY) { cx += stepX; tMaxX += tDx; }
+    else { cy += stepY; tMaxY += tDy; }
+    if (isRockTile(cx, cy)) return false;
   }
   return true;
 }

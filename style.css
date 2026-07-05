@@ -26,3 +26,24 @@ html, body { width: 100%; height: 100%; overflow: hidden; font-family: system-ui
   position: fixed; top: 52px; left: 12px; color: #ffd479; font-weight: 700;
   font-size: 16px; background: rgba(0,0,0,.4); padding: 6px 10px; border-radius: 6px;
 }
+
+/* ---- NEST PILE EAT-MENU ---- */
+#pilemenu {
+  display: none;                /* shown (as flex) while choosing what to eat */
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(0,0,0,.55);
+  align-items: center; justify-content: center;
+}
+.pilebox {
+  background: #241a10; color: #ffe8b0; border: 2px solid #7a5a2a; border-radius: 10px;
+  padding: 22px 26px; min-width: 300px; text-align: center;
+}
+.pilebox h2 { font-size: 22px; letter-spacing: 2px; margin-bottom: 14px; }
+#pilelist { display: flex; flex-direction: column; gap: 8px; }
+#pilelist button {
+  padding: 10px 14px; font-size: 16px; cursor: pointer;
+  color: #2a1c0c; background: #ffcf7a; border: none; border-radius: 6px;
+}
+#pilelist button:hover { background: #ffdd9c; }
+#pilelist .empty { color: #b79a6a; font-size: 15px; padding: 8px; }
+.pilehint { margin-top: 14px; font-size: 13px; color: #b79a6a; }

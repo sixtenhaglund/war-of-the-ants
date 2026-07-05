@@ -74,46 +74,108 @@ function tryGrab() {
   return false;
 }
 
-// Drop your WHOLE load into the nest pile as food — beetles (2 food) and any
-// dragged centipede (its size's food) — up to the pile's FOOD_LIMIT. Called by
-// dropHeld when she's standing on the pile (just drop the prey in, no clicking).
+// ---- the food pile is now PHYSICAL: it's just the real dead bodies lying inside
+//      the drop-spot ring. You can re-grab and move them like anything else. ----
+
+// is this creature lying inside the pile ring?
+function inPile(o) { return Math.hypot(o.x - foodPile.x, o.y - foodPile.y) < PILE_RADIUS; }
+
+// every dead, uncarried body currently in the pile, tagged with its food/heal value
+function pileBodies() {
+  const out = [];
+  for (const b of beetles)    if (b.dead && !b.gone && !b.carried && inPile(b))
+    out.push({ e: b, type: 'beetle',    food: 2,           heal: BEETLE_HEAL });
+  for (const c of centipedes) if (c.dead && !c.gone && !c.carried && inPile(c))
+    out.push({ e: c, type: 'centipede', food: c.type.food, heal: c.type.heal });
+  return out;
+}
+
+// total food stocked in the pile = sum of the food values of those bodies
+function pileFood() { let s = 0; for (const it of pileBodies()) s += it.food; return s; }
+
+// Drop your WHOLE load into the pile: the bodies STAY THERE on the ground (just
+// like a normal drop), so they still count as food and can be picked up again.
 function depositLoad() {
-  while (carried.length && foodCount < FOOD_LIMIT) {                // dump the beetles
-    const b = carried.shift(); b.gone = true;
-    foodCount = Math.min(FOOD_LIMIT, foodCount + 2);
-    pileItems.push({ type: 'beetle', food: 2, heal: BEETLE_HEAL });
+  for (const b of carried) {                              // scatter the beetles around the spot
+    b.carried = false;
+    b.x = foodPile.x + rand(-34, 34);
+    b.y = foodPile.y + rand(-34, 34);
+    b.noPickup = 0.4;
   }
-  if (dragging && foodCount < FOOD_LIMIT) {                         // then the centipede (its size sets the value)
-    dragging.gone = true;
-    foodCount = Math.min(FOOD_LIMIT, foodCount + dragging.type.food);
-    pileItems.push({ type: 'centipede', food: dragging.type.food, heal: dragging.type.heal });
+  carried = [];
+  if (dragging) {                                         // set the centipede down on the pile (its body reforms there)
+    dragging.carried = false;
+    dragging.x = foodPile.x + rand(-24, 24);
+    dragging.y = foodPile.y + rand(-24, 24);
+    dragging.noPickup = 0.4;
     dragging = null;
   }
 }
 
-// Press E to EAT prey and restore health: the centipede in her mouth heals 8, a
-// beetle heals 4. If her mouth is empty but she's standing on the food pile, she
-// eats from the stockpile instead. Skipped at full health so nothing's wasted.
+// Press E: eat what's in her mouth to heal (centipede, then beetle). With empty
+// jaws on the pile, it opens the pile menu so you can SEE and CHOOSE what to eat.
 function eat() {
-  if (queen.hp >= QUEEN_HP) return;                        // already full — don't waste food
+  if (pileMenuOpen) { closePileMenu(); return; }          // E also closes the menu
 
-  if (dragging) {                                          // eat the dragged centipede (bigger = more HP)
+  if (dragging && queen.hp < QUEEN_HP) {                  // eat the dragged centipede (bigger = more HP)
     dragging.gone = true;
     queen.hp = Math.min(QUEEN_HP, queen.hp + dragging.type.heal);
     dragging = null;
     return;
   }
-  if (carried.length) {                                    // eat the beetle in her mouth
+  if (carried.length && queen.hp < QUEEN_HP) {            // eat the beetle in her mouth
     carried.pop().gone = true;
     queen.hp = Math.min(QUEEN_HP, queen.hp + BEETLE_HEAL);
     return;
   }
-  // hands empty → eat from the pile if she's standing on it (each item remembers its heal)
-  if (pileItems.length && Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) < PILE_RADIUS) {
-    const item = pileItems.pop();                          // take one off the heap
-    foodCount = Math.max(0, foodCount - item.food);
-    queen.hp = Math.min(QUEEN_HP, queen.hp + item.heal);
+  togglePileMenu();                                       // hands empty → choose from the pile
+}
+
+// ---- the pile eat-menu: pause, list what's in the pile, click to eat one ----
+function togglePileMenu() {
+  if (pileMenuOpen) { closePileMenu(); return; }
+  if (Math.hypot(queen.x - foodPile.x, queen.y - foodPile.y) >= PILE_RADIUS) return;  // must be on the pile
+  pileMenuOpen = true;
+  document.getElementById('pilemenu').style.display = 'flex';
+  renderPileMenu();
+}
+function closePileMenu() {
+  pileMenuOpen = false;
+  document.getElementById('pilemenu').style.display = 'none';
+}
+
+// build the menu: group identical bodies (same type + heal) into one row with a count
+function renderPileMenu() {
+  const list = document.getElementById('pilelist');
+  list.innerHTML = '';
+  const groups = {};
+  for (const it of pileBodies()) {
+    const key = it.type + '|' + it.heal;
+    (groups[key] || (groups[key] = { type: it.type, heal: it.heal, n: 0 })).n++;
   }
+  const keys = Object.keys(groups);
+  if (!keys.length) { list.innerHTML = '<p class="empty">The pile is empty.</p>'; return; }
+  for (const key of keys) {
+    const g = groups[key];
+    const btn = document.createElement('button');
+    const icon = g.type === 'centipede' ? '🐛' : '🪲';
+    const name = g.type === 'centipede' ? 'Centipede' : 'Beetle';
+    btn.textContent = icon + ' ' + name + ' — heals ' + g.heal + ' HP   ×' + g.n;
+    btn.onclick = () => eatFromPile(g.type, g.heal);
+    list.appendChild(btn);
+  }
+}
+
+// eat one body of the chosen kind straight from the pile, then refresh the menu
+function eatFromPile(type, heal) {
+  for (const it of pileBodies()) {
+    if (it.type === type && it.heal === heal) {
+      it.e.gone = true;                                   // that body is eaten
+      queen.hp = Math.min(QUEEN_HP, queen.hp + heal);
+      break;
+    }
+  }
+  renderPileMenu();
 }
 
 // Right-click drops what she's holding. Over the food pile, the WHOLE load goes
